@@ -73,21 +73,17 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 	}
 
 	// --- 2. Decrypt the Remainder of the Packet ---
-	// Whatever is left in the reader is the RSA-encrypted block.
 	encryptedBlock, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read encrypted block: %w", err)
 	}
-	//
-	// Decrypt the block using the provided private key.
-	// PKCS1v15 is the correct padding scheme for this protocol.
+
 	decryptedBlock, err := DecryptRSA(encryptedBlock)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt rsa block: %w", err)
 	}
 
 	// --- 3. Parse the Decrypted Block ---
-	// Create a new reader for the decrypted plaintext data.
 	decryptedReader := bytes.NewReader(decryptedBlock)
 
 	if err := binary.Read(decryptedReader, binary.LittleEndian, &packet.XTEAKey); err != nil {
@@ -97,19 +93,11 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 		return nil, fmt.Errorf("failed to read account number from decrypted block: %w", err)
 	}
 
-	var passwordLength uint16
-	if err := binary.Read(decryptedReader, binary.LittleEndian, &passwordLength); err != nil {
-		return nil, fmt.Errorf("failed to read password length: %w", err)
-	}
-
-	// Now, read exactly that many bytes to get the password.
-	passwordBytes := make([]byte, passwordLength)
-	_, err = io.ReadFull(decryptedReader, passwordBytes)
+	password, err := readString(decryptedReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read password string (expected %d bytes): %w", passwordLength, err)
+		return nil, fmt.Errorf("failed to parse password: %w", err)
 	}
-	packet.Password = string(passwordBytes)
+	packet.Password = password
 
 	return packet, nil
-
 }
