@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -85,4 +86,31 @@ func DecryptRSA(ciphertext []byte) ([]byte, error) {
 	plaintext := m.Bytes()
 
 	return plaintext, nil
+}
+
+func EncryptRSA(plaintext []byte) ([]byte, error) {
+	// 1. Convert the plaintext byte slice into a big integer.
+	m := new(big.Int).SetBytes(plaintext)
+
+	// 2. Check if the message is too long. The message integer m must be less than the modulus N.
+	if m.Cmp(ServerPrivateKey.N) >= 0 {
+		return nil, errors.New("message too long for RSA key size")
+	}
+
+	// 3. Perform the modular exponentiation: c = m^E mod N
+	// This is the core of RSA encryption.
+	e := big.NewInt(int64(ServerPrivateKey.E))
+	c := new(big.Int).Exp(m, e, ServerPrivateKey.N)
+
+	// 4. Convert the resulting ciphertext integer back into a byte slice.
+	// The ciphertext must be padded with leading zeros to match the key size.
+	keySize := ServerPrivateKey.Size() // e.g., 128 for a 1024-bit key
+	ciphertext := make([]byte, keySize)
+	cBytes := c.Bytes()
+
+	// Copy the ciphertext bytes to the end of the buffer to pad with leading zeros.
+	offset := keySize - len(cBytes)
+	copy(ciphertext[offset:], cBytes)
+
+	return ciphertext, nil
 }
