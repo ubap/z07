@@ -26,23 +26,17 @@ func main() {
 
 	// Loop forever, accepting new connections.
 	for {
-		// Accept blocks until a new connection is made.
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Printf("Failed to accept connection: %v", err)
-			continue // Continue to the next iteration to accept another connection.
+			continue
 		}
 
-		// Handle each connection in a new goroutine.
-		// This allows the server to handle multiple connections simultaneously,
-		// though for this specific task, you'll likely only have one at a time.
 		go handleConnection(conn)
 	}
 }
 
-// handleConnection reads a single Tibia packet and logs its content.
 func handleConnection(conn net.Conn) {
-	// Ensure the connection is closed when this function finishes.
 	defer conn.Close()
 
 	log.Printf("Accepted connection from %s", conn.RemoteAddr())
@@ -86,4 +80,6 @@ func handleConnection(conn net.Conn) {
 	fmt.Printf("\n--- Packet Received from %s ---\n", conn.RemoteAddr())
 	fmt.Printf("%s", hex.Dump(packetBody)) // hex.Dump provides a beautiful, formatted output.
 	fmt.Println("--- End of Packet ---")
+
+	PrintAsGoSlice(packetBody)
 }
