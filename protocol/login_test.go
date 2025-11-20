@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	// We want to use the known test RSA keys for this test.
+	// We want to use the known test RSA keys so we can decrypt the packet
 	crypto.RSA.GameServerPublicKey = &crypto.RSA.ClientPrivateKey.PublicKey
 
 	packet := LoginPacket{
@@ -24,14 +24,10 @@ func Test(t *testing.T) {
 	}
 
 	marshal, err := packet.Marshal()
-	if err != nil {
-		t.Fatalf("Error marshalling login packet: %v", err)
-	}
+	require.NoError(t, err, "Marshalling login packet should not fail")
 
 	loginPacket, err := ParseLoginPacket(marshal)
-	if err != nil {
-		t.Fatalf("Error parsing login packet: %v", err)
-	}
+	require.NoError(t, err, "Failed to parse login packet")
 
 	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
 }

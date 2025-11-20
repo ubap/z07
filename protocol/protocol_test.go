@@ -24,9 +24,7 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 	}
 
 	packet, err := ParseLoginPacket(capturedPacket)
-	if err != nil {
-		t.Fatalf("Failed to parse login packet: %v", err)
-	}
+	require.NoError(t, err, "Failed to parse login packet")
 
 	expected := LoginPacket{
 		Protocol:      1,
