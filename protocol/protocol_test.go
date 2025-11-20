@@ -2,6 +2,8 @@ package protocol
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseLoginPacket_GoldenSample(t *testing.T) {
@@ -26,12 +28,16 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 		t.Fatalf("Failed to parse login packet: %v", err)
 	}
 
-	if packet.AccountNumber != 123 {
-		t.Fatalf("Unexpected AccountNumber. Got %d, expected 123", packet.AccountNumber)
+	expected := LoginPacket{
+		Protocol:      1,
+		ClientOS:      2,
+		ClientVersion: 772,
+		DatSignature:  0x439d5a33,
+		SprSignature:  0x439852be,
+		PicSignature:  0x4450c8d8,
+		XTEAKey:       [4]uint32{0x5b662e94, 0xa6bad792, 0x2c425917, 0x510cf169},
+		AccountNumber: 123,
+		Password:      "baba",
 	}
-
-	if packet.Password != "baba" {
-		t.Fatalf("Unexpected Password. Got %s, expected baba", packet.Password)
-	}
-
+	require.Equal(t, expected, *packet)
 }
