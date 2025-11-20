@@ -1,4 +1,4 @@
-package protocol
+package crypto
 
 import (
 	"crypto/rsa"
@@ -71,7 +71,7 @@ func buildPrivateKeyFromComponents(nStr, dStr string) (*rsa.PrivateKey, error) {
 	return privKey, nil
 }
 
-func decryptRSA(encryptedData []byte) []byte {
+func DecryptRSA(encryptedData []byte) []byte {
 	c := new(big.Int).SetBytes(encryptedData)
 	m := new(big.Int).Exp(c, RSA.ClientPrivateKey.D, RSA.ClientPrivateKey.N)
 
@@ -82,11 +82,11 @@ func decryptRSA(encryptedData []byte) []byte {
 	return decryptedData
 }
 
-func encryptRSA(pubKey *rsa.PublicKey, data []byte) ([]byte, error) {
+func EncryptRSA(pubKey *rsa.PublicKey, data []byte) ([]byte, error) {
 	keySize := pubKey.Size()
 	// 0. Input validation
 	if len(data) > keySize {
-		return nil, fmt.Errorf("encryption failed: data length (%d) is greater than the key size (%d)", len(data), keySize)
+		return nil, fmt.Errorf("crypto failed: data length (%d) is greater than the key size (%d)", len(data), keySize)
 	}
 
 	// 1. Create a new buffer of the exact key size.

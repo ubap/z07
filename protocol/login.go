@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"goTibia/protocol/crypto"
 	"io"
 )
 
@@ -34,7 +35,7 @@ func (lp *LoginPacket) Marshal() ([]byte, error) {
 	rsaPlaintext.WriteString(lp.Password)
 
 	// 2. Encrypt the plaintext block with the target server's public key.
-	encryptedBlock, err := encryptRSA(RSA.GameServerPublicKey, rsaPlaintext.Bytes())
+	encryptedBlock, err := crypto.EncryptRSA(crypto.RSA.GameServerPublicKey, rsaPlaintext.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 		return nil, fmt.Errorf("failed to read encrypted block: %w", err)
 	}
 
-	decryptedBlock := decryptRSA(encryptedBlock)
+	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
 
 	messagePayload := bytes.TrimLeft(decryptedBlock, "\x00")
 

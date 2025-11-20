@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"goTibia/protocol/crypto"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,7 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	// We want to use the known test RSA keys for this test.
-	RSA.GameServerPublicKey = &RSA.ClientPrivateKey.PublicKey
+	crypto.RSA.GameServerPublicKey = &crypto.RSA.ClientPrivateKey.PublicKey
 
 	packet := LoginPacket{
 		Protocol:      1,

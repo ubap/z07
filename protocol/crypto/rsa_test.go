@@ -1,4 +1,4 @@
-package protocol
+package crypto
 
 import (
 	"bytes"
@@ -12,10 +12,10 @@ func Test_EncryptAndDecrypt(t *testing.T) {
 	inputData := []byte("Lorem Ipsum is simply dummy text of the printing and typesetting industry.")
 
 	// 2. Act
-	encryptedData, err := encryptRSA(&RSA.ClientPrivateKey.PublicKey, inputData)
+	encryptedData, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, inputData)
 	require.NoError(t, err, "Encryption should not fail")
 
-	decryptedData := decryptRSA(encryptedData)
+	decryptedData := DecryptRSA(encryptedData)
 
 	// 3. Assert
 	// The decrypted data is a full block. We must verify that our original
@@ -33,10 +33,10 @@ func TestEncryptDecrypt_RoundTrip_WithLeadingZero(t *testing.T) {
 	originalPlaintext := []byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77}
 
 	// 2. Act: Encrypt and then decrypt the data.
-	ciphertext, err := encryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
+	ciphertext, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
 	require.NoError(t, err, "Encryption should not fail")
 
-	decryptedBlock := decryptRSA(ciphertext)
+	decryptedBlock := DecryptRSA(ciphertext)
 
 	// 3. Assert (Improved)
 
@@ -54,7 +54,7 @@ func TestEncryptDecrypt_RoundTrip_WithLeadingZero(t *testing.T) {
 	t.Log("Successfully verified that a message with a leading zero is correctly left-aligned and padded.")
 }
 
-// TestEncryptRSA_IsLeftAligned confirms that our encryptRSA function correctly
+// TestEncryptRSA_IsLeftAligned confirms that our EncryptRSA function correctly
 // creates a left-aligned, right-padded block, mimicking the behavior of the C++ client.
 func TestEncryptRSA_IsLeftAligned(t *testing.T) {
 	// 1. Arrange: Define a short plaintext message.
@@ -63,10 +63,10 @@ func TestEncryptRSA_IsLeftAligned(t *testing.T) {
 	originalPlaintext := []byte{0x00, 0xAA, 0xBB, 0xCC, 0xDD}
 
 	// 2. Act: Encrypt the message using the function we want to test.
-	ciphertext, err := encryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
-	require.NoError(t, err, "encryptRSA should not produce an error")
+	ciphertext, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
+	require.NoError(t, err, "EncryptRSA should not produce an error")
 
-	decryptedBlock := decryptRSA(ciphertext)
+	decryptedBlock := DecryptRSA(ciphertext)
 
 	// 3. Assert: Verify the structure of the decrypted block.
 
@@ -86,5 +86,5 @@ func TestEncryptRSA_IsLeftAligned(t *testing.T) {
 	actualPadding := decryptedBlock[paddingStart:]
 	require.Equal(t, expectedPadding, actualPadding, "The remainder of the block should be zero-byte padding")
 
-	t.Log("Test passed: encryptRSA correctly produces a left-aligned, right-padded block.")
+	t.Log("Test passed: EncryptRSA correctly produces a left-aligned, right-padded block.")
 }
