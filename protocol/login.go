@@ -34,7 +34,7 @@ func (lp *LoginPacket) Marshal() ([]byte, error) {
 	rsaPlaintext.WriteString(lp.Password)
 
 	// 2. Encrypt the plaintext block with the target server's public key.
-	encryptedBlock, err := EncryptRSA(RSA.GameServerPublicKey, rsaPlaintext.Bytes())
+	encryptedBlock, err := encryptRSA(RSA.GameServerPublicKey, rsaPlaintext.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +86,7 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 		return nil, fmt.Errorf("failed to read encrypted block: %w", err)
 	}
 
-	decryptedBlock, err := DecryptRSA(encryptedBlock)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt rsa block: %w", err)
-	}
+	decryptedBlock := decryptRSA(encryptedBlock)
 
 	messagePayload := bytes.TrimLeft(decryptedBlock, "\x00")
 
