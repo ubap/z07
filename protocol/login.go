@@ -34,7 +34,7 @@ func (lp *LoginPacket) Marshal() ([]byte, error) {
 	rsaPlaintext.WriteString(lp.Password)
 
 	// 2. Encrypt the plaintext block with the target server's public key.
-	encryptedBlock, err := EncryptRSA(keyForGameServerCommunication, rsaPlaintext.Bytes())
+	encryptedBlock, err := EncryptRSA(RSA.GameServerPublicKey, rsaPlaintext.Bytes())
 	if err != nil {
 		return nil, err
 	}

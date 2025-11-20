@@ -12,7 +12,7 @@ func Test_EncryptAndDecrypt(t *testing.T) {
 	inputData := []byte("Lorem Ipsum is simply dummy text of the printing and typesetting industry.")
 
 	// 2. Act
-	encryptedData, err := EncryptRSA(&keyForClientCommunication.PublicKey, inputData)
+	encryptedData, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, inputData)
 	require.NoError(t, err, "Encryption should not fail")
 
 	decryptedData, err := DecryptRSA(encryptedData)
@@ -34,7 +34,7 @@ func TestEncryptDecrypt_RoundTrip_WithLeadingZero(t *testing.T) {
 	originalPlaintext := []byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77}
 
 	// 2. Act: Encrypt and then decrypt the data.
-	ciphertext, err := EncryptRSA(&keyForClientCommunication.PublicKey, originalPlaintext)
+	ciphertext, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
 	require.NoError(t, err, "Encryption should not fail")
 
 	decryptedBlock, err := DecryptRSA(ciphertext)
@@ -45,7 +45,7 @@ func TestEncryptDecrypt_RoundTrip_WithLeadingZero(t *testing.T) {
 	// 3a. Construct the exact byte block we expect to receive after decryption.
 	// It should be a block of the full key size, with our originalPlaintext
 	// at the beginning, and the rest filled with zeros.
-	keySize := keyForClientCommunication.Size()
+	keySize := RSA.ClientPrivateKey.Size()
 	expectedBlock := make([]byte, keySize) // Creates a slice of all zeros
 	copy(expectedBlock, originalPlaintext) // Copies our data to the start
 
@@ -65,7 +65,7 @@ func TestEncryptRSA_IsLeftAligned(t *testing.T) {
 	originalPlaintext := []byte{0x00, 0xAA, 0xBB, 0xCC, 0xDD}
 
 	// 2. Act: Encrypt the message using the function we want to test.
-	ciphertext, err := EncryptRSA(&keyForClientCommunication.PublicKey, originalPlaintext)
+	ciphertext, err := EncryptRSA(&RSA.ClientPrivateKey.PublicKey, originalPlaintext)
 	require.NoError(t, err, "EncryptRSA should not produce an error")
 
 	// Decrypt it using our definitive, Java-like DecryptRSA to check the result.
@@ -75,7 +75,7 @@ func TestEncryptRSA_IsLeftAligned(t *testing.T) {
 	// 3. Assert: Verify the structure of the decrypted block.
 
 	// Assertion 3a: The decrypted block should have the full key size.
-	keySize := keyForClientCommunication.Size()
+	keySize := RSA.ClientPrivateKey.Size()
 	require.Equal(t, keySize, len(decryptedBlock), "Decrypted block must have the full key size")
 
 	// Assertion 3b: The original plaintext must be at the BEGINNING of the block.

@@ -7,8 +7,8 @@ import (
 )
 
 func Test(t *testing.T) {
-	// setup the key for encryption, we want to use the client communication keypair
-	keyForGameServerCommunication = &keyForClientCommunication.PublicKey
+	// We want to use the known test RSA keys for this test.
+	RSA.GameServerPublicKey = &RSA.ClientPrivateKey.PublicKey
 
 	packet := LoginPacket{
 		Protocol:      1,
