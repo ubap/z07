@@ -24,6 +24,7 @@ type Server struct {
 func NewServer(listenAddr, realServerAddr string) *Server {
 	registry := protocol.NewHandlerRegistry()
 	registry.Register(login.ServerOpcodeDisconnectClient, &handlers.DisconnectClientHandler{})
+	registry.Register(login.ServerOpcodeMOTD, &handlers.MOTDHandler{})
 
 	return &Server{
 		ListenAddr:      listenAddr,
