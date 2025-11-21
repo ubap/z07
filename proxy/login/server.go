@@ -73,6 +73,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 
 	message, err := protoServerConn.ReadMessage()
 	if err != nil {
+		log.Printf("Login: Failed to read server response for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
