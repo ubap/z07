@@ -4,21 +4,17 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	log2 "goTibia/log"
 	"goTibia/protocol"
-	"goTibia/protocol/login"
-	"goTibia/proxy"
 	"io"
 	"log"
 	"net"
-	// CRITICAL: Blank import the handler package. This ensures its
-	// init() functions are executed, populating the global registry.
-	_ "goTibia/protocol/login/s2c"
 )
 
 type Server struct {
 	ListenAddr     string
 	RealServerAddr string
-	S2CHandlers    *protocol.HandlerRegistry
+	S2CHandlers    *HandlerRegistry
 	// You could add other dependencies here, like a specific logger.
 }
 
@@ -26,7 +22,7 @@ func NewServer(listenAddr, realServerAddr string) *Server {
 	return &Server{
 		ListenAddr:     listenAddr,
 		RealServerAddr: realServerAddr,
-		S2CHandlers:    login.S2CHandlers,
+		S2CHandlers:    S2CHandlers,
 	}
 }
 
@@ -77,7 +73,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
+	dumper := &log2.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
 	dumper.Write(message)
 
 	s.processStream(message)
@@ -87,7 +83,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
-func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*login.ClientCredentialPacket, error) {
+func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*ClientCredentialPacket, error) {
 	messageBytes, err := client.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
@@ -96,7 +92,7 @@ func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*login.C
 		return nil, fmt.Errorf("error reading message: %w", err)
 	}
 
-	packet, err := login.ParseCredentialsPacket(messageBytes)
+	packet, err := ParseCredentialsPacket(messageBytes)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing credentials packet: %w", err)
 	}
@@ -108,7 +104,7 @@ func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*login.C
 
 // forwardLoginPacket connects to the real server and sends the re-encoded packet.
 // It returns the established server connection or an error.
-func (s *Server) forwardLoginPacket(packet *login.ClientCredentialPacket) (*protocol.Connection, error) {
+func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.Connection, error) {
 	serverConn, err := net.Dial("tcp", s.RealServerAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to real server at %s: %w", s.RealServerAddr, err)

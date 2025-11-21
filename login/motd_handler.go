@@ -1,8 +1,7 @@
-package s2c
+package login
 
 import (
 	"goTibia/protocol"
-	"goTibia/protocol/login"
 	"io"
 	"log"
 	"strconv"
@@ -11,7 +10,7 @@ import (
 
 func init() {
 	// This single line registers our handler with the global registry.
-	login.S2CHandlers.Register(ServerOpcodeMOTD, &MOTDHandler{})
+	S2CHandlers.Register(ServerOpcodeMOTD, &MOTDHandler{})
 }
 
 type MOTDHandler struct {

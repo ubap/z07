@@ -1,4 +1,4 @@
-package proxy
+package log
 
 import (
 	"encoding/hex"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goTibia/proxy/login"
+	"goTibia/login"
 	"log"
 )
 

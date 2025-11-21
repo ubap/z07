@@ -1,14 +1,13 @@
-package s2c
+package login
 
 import (
 	"goTibia/protocol"
-	"goTibia/protocol/login"
 	"io"
 	"log"
 )
 
 func init() {
-	login.S2CHandlers.Register(ServerOpcodeDisconnectClient, &DisconnectClientHandler{})
+	S2CHandlers.Register(ServerOpcodeDisconnectClient, &DisconnectClientHandler{})
 }
 
 type DisconnectClientHandler struct {

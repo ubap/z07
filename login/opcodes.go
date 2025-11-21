@@ -1,4 +1,4 @@
-package s2c
+package login
 
 const (
 	ServerOpcodeMOTD             uint8 = 0x14
