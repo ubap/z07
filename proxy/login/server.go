@@ -5,6 +5,7 @@ import (
 	"goTibia/protocol"
 	"goTibia/protocol/login"
 	"goTibia/proxy"
+	"goTibia/proxy/login/handlers"
 	"io"
 	"log"
 	"net"
@@ -17,6 +18,13 @@ type Server struct {
 }
 
 func NewServer(listenAddr, realServerAddr string) *Server {
+	// Create the default handler instance here in the application layer.
+	defaultHandler := &handlers.DefaultPassThroughHandler{}
+
+	// Pass it to the registry constructor.
+	registry := protocol.NewHandlerRegistry(defaultHandler)
+	registry.Register(login.ServerOpcodeMOTD, &handlers.MOTDHandler{})
+
 	return &Server{
 		ListenAddr:     listenAddr,
 		RealServerAddr: realServerAddr,
