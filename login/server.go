@@ -151,18 +151,10 @@ func (s *Server) processStream(decryptedPayload []byte) ([]byte, error) {
 	// --- 2. Loop until the command stream is empty. ---
 	for {
 		// Read the next opcode.
-		opcodeBuffer := make([]byte, 1)
-		n, err := commandStream.Read(opcodeBuffer)
-		if err == io.EOF {
-			break // Successfully reached the end of the stream.
-		}
+		opcode, err := protocol.ReadByte(commandStream)
 		if err != nil {
-			return nil, fmt.Errorf("error reading opcode from stream: %w", err)
+			return nil, err
 		}
-		if n == 0 {
-			break
-		}
-		opcode := opcodeBuffer[0]
 		log.Printf("Login: Processing opcode %#x", opcode)
 
 		handler, err := s.S2CHandlers.Get(opcode)

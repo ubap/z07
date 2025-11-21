@@ -29,3 +29,15 @@ func ReadString(r io.Reader) (string, error) {
 	// 4. Convert to string and return.
 	return string(buffer), nil
 }
+
+func ReadByte(r io.Reader) (uint8, error) {
+	opcodeBuffer := make([]byte, 1)
+	n, err := r.Read(opcodeBuffer)
+	if err != nil {
+		return 0, fmt.Errorf("error reading opcode from stream: %w", err)
+	}
+	if n == 0 {
+		return 0, fmt.Errorf("0 bytes read when expecting 1 byte")
+	}
+	return opcodeBuffer[0], nil
+}
