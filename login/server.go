@@ -141,7 +141,6 @@ func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.C
 	        |                             |
 	     (Header)                 (Stream of Commands)
 */
-
 func (s *Server) receiveLoginResultMessage(decryptedPayload []byte) (*LoginResultMessage, error) {
 	// A reader for the incoming decrypted stream.
 	streamReader := bytes.NewReader(decryptedPayload)
