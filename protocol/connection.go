@@ -49,23 +49,24 @@ func (c *Connection) ReadMessage() ([]byte, error) {
 }
 
 func (c *Connection) WriteMessage(payload []byte) error {
-	length := uint16(len(payload))
+	var finalPayload []byte
+	var err error
+	if c.XTEAEnabled {
+		finalPayload, err = crypto.EncryptXTEA(payload, c.XTEAKey)
+		if err != nil {
+			return err
+		}
+	} else {
+		finalPayload = payload
+	}
 
+	length := uint16(len(finalPayload))
 	// Write the 2-byte length prefix.
 	if err := binary.Write(c.conn, binary.LittleEndian, length); err != nil {
 		return err
 	}
 
-	if !c.XTEAEnabled {
-		_, err := c.conn.Write(payload)
-		return err
-	}
-
-	encryptedPayload, err := crypto.EncryptXTEA(payload, c.XTEAKey)
-	if err != nil {
-		return err
-	}
-	_, err = c.conn.Write(encryptedPayload)
+	_, err = c.conn.Write(finalPayload)
 	return err
 }
 

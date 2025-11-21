@@ -14,7 +14,6 @@ import (
 type Server struct {
 	ListenAddr     string
 	RealServerAddr string
-	S2CHandlers    *HandlerRegistry
 	// You could add other dependencies here, like a specific logger.
 }
 
@@ -22,7 +21,6 @@ func NewServer(listenAddr, realServerAddr string) *Server {
 	return &Server{
 		ListenAddr:     listenAddr,
 		RealServerAddr: realServerAddr,
-		S2CHandlers:    S2CHandlers,
 	}
 }
 
@@ -50,7 +48,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	log.Printf("Login: Accepted connection from %s", protoClientConn.RemoteAddr())
 
 	// Phase 1: Receive and Decode
-	loginPacket, err := s.receiveCredentialsPacket(protoClientConn)
+	loginPacket, err := s.receiveCredentialsMessage(protoClientConn)
 	if err != nil {
 		log.Printf("Login: Failed to process credentials packet from %s: %v", protoClientConn.RemoteAddr(), err)
 		return
@@ -76,14 +74,22 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	dumper := &log2.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
 	dumper.Write(message)
 
-	s.processStream(message)
+	resultMessage, err := s.receiveLoginResultMessage(message)
+	if err != nil {
+		return
+	}
 
-	protoClientConn.WriteMessage(message)
+	marshal, err := resultMessage.Marshal()
+	if err != nil {
+		return
+	}
+
+	protoClientConn.WriteMessage(marshal)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
-func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*ClientCredentialPacket, error) {
+func (s *Server) receiveCredentialsMessage(client *protocol.Connection) (*ClientCredentialPacket, error) {
 	messageBytes, err := client.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
@@ -135,9 +141,11 @@ func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.C
 	        |                             |
 	     (Header)                 (Stream of Commands)
 */
-func (s *Server) processStream(decryptedPayload []byte) ([]byte, error) {
+
+func (s *Server) receiveLoginResultMessage(decryptedPayload []byte) (*LoginResultMessage, error) {
 	// A reader for the incoming decrypted stream.
 	streamReader := bytes.NewReader(decryptedPayload)
+	message := LoginResultMessage{}
 
 	// --- 1. Read the single length header at the beginning of the stream. ---
 	var streamLength uint16
@@ -152,24 +160,20 @@ func (s *Server) processStream(decryptedPayload []byte) ([]byte, error) {
 	for {
 		// Read the next opcode.
 		opcode, err := protocol.ReadByte(commandStream)
+		if err == io.EOF {
+			return &message, nil
+		}
 		if err != nil {
 			return nil, err
 		}
 		log.Printf("Login: Processing opcode %#x", opcode)
 
-		handler, err := s.S2CHandlers.Get(opcode)
-		if err != nil {
-			log.Printf("Login: Failed to get handler for opcode %#x, short-circuiting", opcode)
-			return decryptedPayload, err
+		switch opcode {
+		case S2COpcodeDisconnectClient:
+			disconnectedReason, _ := protocol.ReadString(commandStream)
+			log.Print("DisconnectClientHandler: " + disconnectedReason)
+			message.ClientDisconnected = true
+			message.ClientDisconnectedReason = disconnectedReason
 		}
-
-		err = handler.Handle(commandStream)
-		if err != nil {
-			log.Printf("Login: Handler for opcode %d returned error: %v", opcode, err)
-			return decryptedPayload, err
-		}
-
 	}
-
-	return decryptedPayload, nil
 }
