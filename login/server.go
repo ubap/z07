@@ -3,6 +3,7 @@ package login
 import (
 	"fmt"
 	"goTibia/protocol"
+	"io"
 	"log"
 	"net"
 )
@@ -74,11 +75,13 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 
 	resultMessage, err := s.receiveLoginResultMessage(message)
 	if err != nil {
+		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
 	marshal, err := resultMessage.Marshal()
 	if err != nil {
+		log.Printf("Login: Failed to marshal result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
@@ -127,8 +130,12 @@ func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) 
 	for {
 		// Read the next opcode.
 		opcode := packetReader.ReadByte()
-		if packetReader.Err() != nil {
-			return nil, packetReader.Err()
+		err := packetReader.Err()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
 		}
 		log.Printf("Login: Processing opcode %#x", opcode)
 
@@ -155,4 +162,5 @@ func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) 
 		}
 
 	}
+	return &message, nil
 }
