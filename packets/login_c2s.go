@@ -1,8 +1,6 @@
 package packets
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	"goTibia/protocol"
 	"goTibia/protocol/crypto"
@@ -22,36 +20,33 @@ type ClientCredentialPacket struct {
 	Password      string
 }
 
-func (lp *ClientCredentialPacket) Encode() ([]byte, error) {
-	// 1. Prepare the plaintext block that needs to be encrypted.
-	rsaPlaintext := new(bytes.Buffer)
+func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
+	pw.WriteByte(lp.Protocol)
+	pw.WriteUint16(lp.ClientOS)
+	pw.WriteUint16(lp.ClientVersion)
+	pw.WriteUint32(lp.DatSignature)
+	pw.WriteUint32(lp.SprSignature)
+	pw.WriteUint32(lp.PicSignature)
 
+	// RSA Encrypted part
+	toEncrypt := protocol.NewPacketWriter()
 	// Write the check byte, XTEA key, account number, and password.
-	rsaPlaintext.WriteByte(0x00)
-	binary.Write(rsaPlaintext, binary.LittleEndian, lp.XTEAKey)
-	binary.Write(rsaPlaintext, binary.LittleEndian, lp.AccountNumber)
+	toEncrypt.WriteByte(0x00)
+	toEncrypt.WriteUint32(lp.XTEAKey[0])
+	toEncrypt.WriteUint32(lp.XTEAKey[1])
+	toEncrypt.WriteUint32(lp.XTEAKey[2])
+	toEncrypt.WriteUint32(lp.XTEAKey[3])
+	toEncrypt.WriteUint32(lp.AccountNumber)
+	toEncrypt.WriteString(lp.Password)
 
-	// Write the length-prefixed password string.
-	binary.Write(rsaPlaintext, binary.LittleEndian, uint16(len(lp.Password)))
-	rsaPlaintext.WriteString(lp.Password)
+	// Encrypt the data block with the target server's public key.
+	unencodedBytes, err := toEncrypt.GetBytes()
+	pw.SetError(err)
 
-	// 2. Encrypt the plaintext block with the target server's public key.
-	encryptedBlock, err := crypto.EncryptRSA(crypto.RSA.GameServerPublicKey, rsaPlaintext.Bytes())
-	if err != nil {
-		return nil, err
-	}
+	encryptedBlock, err := crypto.EncryptRSA(crypto.RSA.GameServerPublicKey, unencodedBytes)
+	pw.SetError(err)
 
-	// 3. Assemble the full packet by prepending the unencrypted header.
-	fullPacket := new(bytes.Buffer)
-	binary.Write(fullPacket, binary.LittleEndian, lp.Protocol)
-	binary.Write(fullPacket, binary.LittleEndian, lp.ClientOS)
-	binary.Write(fullPacket, binary.LittleEndian, lp.ClientVersion)
-	binary.Write(fullPacket, binary.LittleEndian, lp.DatSignature)
-	binary.Write(fullPacket, binary.LittleEndian, lp.SprSignature)
-	binary.Write(fullPacket, binary.LittleEndian, lp.PicSignature)
-	fullPacket.Write(encryptedBlock)
-
-	return fullPacket.Bytes(), nil
+	pw.WriteBytes(encryptedBlock)
 }
 
 func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredentialPacket, error) {

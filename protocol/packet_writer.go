@@ -78,3 +78,7 @@ func (pw *PacketWriter) GetBytes() ([]byte, error) {
 
 	return finalBytes, nil
 }
+
+func (pw *PacketWriter) SetError(err error) {
+	pw.err = err
+}

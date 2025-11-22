@@ -6,6 +6,7 @@ import (
 	"goTibia/protocol"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -55,12 +56,19 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	protoServerConn, err := s.forwardLoginPacket(loginPacket)
+	protoServerConn, err := s.connectToServer()
 	if err != nil {
-		log.Printf("Login: Failed to forward credentials packet for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("Login: Failed to connect to %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 	defer protoServerConn.Close()
+
+	if err := protoServerConn.SendPacket(loginPacket); err != nil {
+		log.Printf("Login: Failed to forward credentials to backend: %v", err)
+		return
+	}
+
+	log.Println("Login: Credentials forwarded to backend.")
 
 	protoServerConn.EnableXTEA(loginPacket.XTEAKey)
 	protoClientConn.EnableXTEA(loginPacket.XTEAKey)
@@ -96,13 +104,8 @@ func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*pr
 	protoServerConn := protocol.NewConnection(serverConn)
 	log.Printf("Login: Successfully connected to real server %s", s.RealServerAddr)
 
-	outgoingMessageBytes, err := packet.Encode()
+	err = protoServerConn.SendPacket(packet)
 	if err != nil {
-		protoServerConn.Close() // Clean up connection on failure
-		return nil, fmt.Errorf("failed to encode outgoing packet: %w", err)
-	}
-
-	if err := protoServerConn.WriteMessage(outgoingMessageBytes); err != nil {
 		protoServerConn.Close() // Clean up connection on failure
 		return nil, fmt.Errorf("failed to send login packet to real server: %w", err)
 	}
@@ -152,4 +155,13 @@ func (s *Server) receiveLoginResultMessage(pr *protocol.PacketReader) (*packets.
 
 	}
 	return &message, nil
+}
+
+func (s *Server) connectToServer() (*protocol.Connection, error) {
+	conn, err := net.DialTimeout("tcp", s.RealServerAddr, 5*time.Second)
+	if err != nil {
+		return nil, fmt.Errorf("backend unavailable at %s: %w", s.RealServerAddr, err)
+	}
+
+	return protocol.NewConnection(conn), nil
 }
