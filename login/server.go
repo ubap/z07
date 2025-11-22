@@ -117,8 +117,6 @@ func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*pr
 
 func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*packets.LoginResultMessage, error) {
 	message := packets.LoginResultMessage{}
-
-	// --- 2. Loop until the command stream is empty. ---
 	for {
 		// Read the next opcode.
 		opcode := packetReader.ReadByte()
@@ -138,13 +136,13 @@ func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) 
 			message.ClientDisconnected = true
 			message.ClientDisconnectedReason = disconnectedReason
 		case packets.S2COpcodeMOTD:
-			motd, err := packets.ReadMotd(packetReader)
+			motd, err := packets.ParseMotd(packetReader)
 			if err != nil {
 				return nil, err
 			}
 			message.Motd = motd
 		case packets.S2COpcodeCharacterList:
-			charList, err := packets.ReadCharacterList(packetReader)
+			charList, err := packets.ParseCharacterList(packetReader)
 			if err != nil {
 				return nil, err
 			}

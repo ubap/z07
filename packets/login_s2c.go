@@ -47,7 +47,7 @@ type CharacterEntry struct {
 	WorldPort uint16
 }
 
-func ReadCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
+func ParseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
 	entryCount := packetReader.ReadByte()
 
 	characterEntries := make([]*CharacterEntry, entryCount)
@@ -94,7 +94,7 @@ type Motd struct {
 	Message string
 }
 
-func ReadMotd(packetReader *protocol.PacketReader) (*Motd, error) {
+func ParseMotd(packetReader *protocol.PacketReader) (*Motd, error) {
 	data := packetReader.ReadString()
 	if packetReader.Err() != nil {
 		return nil, packetReader.Err()
