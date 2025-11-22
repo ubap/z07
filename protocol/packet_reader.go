@@ -130,3 +130,7 @@ func (pr *PacketReader) ReadAll() []byte {
 
 	return buf
 }
+
+func (pr *PacketReader) Remaining() int {
+	return pr.reader.Len()
+}

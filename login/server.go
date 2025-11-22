@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"goTibia/packets"
 	"goTibia/protocol"
-	"io"
 	"log"
 	"net"
 )
@@ -56,7 +55,6 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	// TODO Rename, struct more meaningfully
 	protoServerConn, err := s.forwardLoginPacket(loginPacket)
 	if err != nil {
 		log.Printf("Login: Failed to forward credentials packet for %s: %v", protoClientConn.RemoteAddr(), err)
@@ -115,40 +113,43 @@ func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*pr
 	return protoServerConn, nil
 }
 
-func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*packets.LoginResultMessage, error) {
+func (s *Server) receiveLoginResultMessage(pr *protocol.PacketReader) (*packets.LoginResultMessage, error) {
 	message := packets.LoginResultMessage{}
-	for {
-		// Read the next opcode.
-		opcode := packetReader.ReadByte()
-		err := packetReader.Err()
-		if err == io.EOF {
-			break
+	for pr.Remaining() > 0 {
+		opcode := pr.ReadByte()
+		if err := pr.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read opcode: %w", err)
 		}
-		if err != nil {
-			return nil, err
-		}
+
 		log.Printf("Login: Processing opcode %#x", opcode)
 
 		switch opcode {
 		case packets.S2COpcodeDisconnectClient:
-			disconnectedReason := packetReader.ReadString()
+			disconnectedReason := pr.ReadString()
+			if err := pr.Err(); err != nil {
+				return nil, fmt.Errorf("failed to read disconnect reason: %w", err)
+			}
 			log.Print("DisconnectClientHandler: " + disconnectedReason)
 			message.ClientDisconnected = true
 			message.ClientDisconnectedReason = disconnectedReason
 		case packets.S2COpcodeMOTD:
-			motd, err := packets.ParseMotd(packetReader)
+			motd, err := packets.ParseMotd(pr)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to parse MOTD: %w", err)
 			}
 			message.Motd = motd
 		case packets.S2COpcodeCharacterList:
-			charList, err := packets.ParseCharacterList(packetReader)
+			charList, err := packets.ParseCharacterList(pr)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to parse CharList: %w", err)
 			}
 			message.CharacterList = charList
 		default:
-			panic("unknown opcode " + fmt.Sprintf("%#x", opcode))
+			return nil, fmt.Errorf("unknown login opcode: %#x", opcode)
+		}
+
+		if err := pr.Err(); err != nil {
+			return nil, fmt.Errorf("error parsing packet content for opcode %#x: %w", opcode, err)
 		}
 
 	}
