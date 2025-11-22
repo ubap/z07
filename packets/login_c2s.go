@@ -22,7 +22,7 @@ type ClientCredentialPacket struct {
 	Password      string
 }
 
-func (lp *ClientCredentialPacket) Marshal() ([]byte, error) {
+func (lp *ClientCredentialPacket) Encode() ([]byte, error) {
 	// 1. Prepare the plaintext block that needs to be encrypted.
 	rsaPlaintext := new(bytes.Buffer)
 

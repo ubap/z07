@@ -16,7 +16,7 @@ type LoginResultMessage struct {
 	CharacterList            *CharacterList
 }
 
-func (lp *LoginResultMessage) Marshal() ([]byte, error) {
+func (lp *LoginResultMessage) Encode() ([]byte, error) {
 	pw := protocol.NewPacketWriter()
 
 	if lp.ClientDisconnected {

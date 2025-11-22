@@ -79,13 +79,13 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	marshal, err := resultMessage.Marshal()
+	encoded, err := resultMessage.Encode()
 	if err != nil {
-		log.Printf("Login: Failed to marshal result message for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("Login: Failed to encoded result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	protoClientConn.WriteMessage(marshal)
+	protoClientConn.WriteMessage(encoded)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
@@ -100,10 +100,10 @@ func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*pr
 	protoServerConn := protocol.NewConnection(serverConn)
 	log.Printf("Login: Successfully connected to real server %s", s.RealServerAddr)
 
-	outgoingMessageBytes, err := packet.Marshal()
+	outgoingMessageBytes, err := packet.Encode()
 	if err != nil {
 		protoServerConn.Close() // Clean up connection on failure
-		return nil, fmt.Errorf("failed to marshal outgoing packet: %w", err)
+		return nil, fmt.Errorf("failed to encode outgoing packet: %w", err)
 	}
 
 	if err := protoServerConn.WriteMessage(outgoingMessageBytes); err != nil {

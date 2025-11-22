@@ -24,10 +24,10 @@ func Test(t *testing.T) {
 		Password:      "secret",
 	}
 
-	marshal, err := packet.Marshal()
-	require.NoError(t, err, "Marshalling login packet should not fail")
+	encoded, err := packet.Encode()
+	require.NoError(t, err, "Encoding login packet should not fail")
 
-	reader := protocol.NewPacketReader(marshal)
+	reader := protocol.NewPacketReader(encoded)
 	loginPacket, err := ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
