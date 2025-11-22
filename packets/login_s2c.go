@@ -16,9 +16,7 @@ type LoginResultMessage struct {
 	CharacterList            *CharacterList
 }
 
-func (lp *LoginResultMessage) Encode() ([]byte, error) {
-	pw := protocol.NewPacketWriter()
-
+func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) error {
 	if lp.ClientDisconnected {
 		pw.WriteByte(S2COpcodeDisconnectClient)
 		pw.WriteString(lp.ClientDisconnectedReason)
@@ -29,7 +27,7 @@ func (lp *LoginResultMessage) Encode() ([]byte, error) {
 		WriteCharacterList(pw, lp.CharacterList)
 	}
 
-	return pw.GetBytes()
+	return pw.Err()
 }
 
 // endregion LoginResultMessage

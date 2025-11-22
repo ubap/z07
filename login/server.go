@@ -77,13 +77,20 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	encoded, err := resultMessage.Encode()
+	pw := &protocol.PacketWriter{}
+
+	err = resultMessage.Encode(pw)
 	if err != nil {
 		log.Printf("Login: Failed to encoded result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	protoClientConn.WriteMessage(encoded)
+	bytes, err := pw.GetBytes()
+	if err != nil {
+		return
+	}
+
+	protoClientConn.WriteMessage(bytes)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
