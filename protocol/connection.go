@@ -25,10 +25,8 @@ func (c *Connection) EnableXTEA(key [4]uint32) {
 	c.XTEAKey = key
 }
 
-// ReadMessage reads a single, complete message from the stream.
-// It handles the 2-byte length prefix and returns the message payload.
 func (c *Connection) ReadMessage() (*PacketReader, error) {
-	// 1. Read the header (2 bytes)
+	// Read the header (2 bytes)
 	var header [2]byte
 	if _, err := io.ReadFull(c.conn, header[:]); err != nil {
 		return nil, err
@@ -41,7 +39,7 @@ func (c *Connection) ReadMessage() (*PacketReader, error) {
 		return nil, err
 	}
 
-	// 3. Decrypt if necessary (Linear flow, no else block)
+	// 3. Decrypt if necessary
 	if c.XTEAEnabled {
 		var err error
 		payload, err = crypto.DecryptXTEA(payload, c.XTEAKey)
@@ -99,12 +97,10 @@ func (c *Connection) WriteMessage(payload []byte) error {
 	return err
 }
 
-// Close simply closes the underlying network connection.
 func (c *Connection) Close() error {
 	return c.conn.Close()
 }
 
-// RemoteAddr returns the remote network address.
 func (c *Connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
