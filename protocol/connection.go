@@ -27,47 +27,75 @@ func (c *Connection) EnableXTEA(key [4]uint32) {
 
 // ReadMessage reads a single, complete message from the stream.
 // It handles the 2-byte length prefix and returns the message payload.
-func (c *Connection) ReadMessage() ([]byte, error) {
-	var length uint16
-	// Read the 2-byte length prefix.
-	if err := binary.Read(c.conn, binary.LittleEndian, &length); err != nil {
-		// An io.EOF here is a clean disconnect.
+func (c *Connection) ReadMessage() (*PacketReader, error) {
+	// 1. Read the header (2 bytes)
+	var header [2]byte
+	if _, err := io.ReadFull(c.conn, header[:]); err != nil {
 		return nil, err
 	}
+	length := binary.LittleEndian.Uint16(header[:])
 
-	// Read the message body of the specified length.
+	// 2. Read the exact payload
 	payload := make([]byte, length)
 	if _, err := io.ReadFull(c.conn, payload); err != nil {
 		return nil, err
 	}
 
+	// 3. Decrypt if necessary (Linear flow, no else block)
 	if c.XTEAEnabled {
-		return crypto.DecryptXTEA(payload, c.XTEAKey)
+		var err error
+		payload, err = crypto.DecryptXTEA(payload, c.XTEAKey)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return payload, nil
+	return NewPacketReader(payload), nil
 }
 
-// Responsible for framing, encrypting (if enabled), and sending a message.
 func (c *Connection) WriteMessage(payload []byte) error {
-	var finalPayload []byte
+	var dataToSend []byte
 	var err error
+
 	if c.XTEAEnabled {
-		finalPayload, err = crypto.EncryptXTEA(payload, c.XTEAKey)
+		// 1. Prepend the message length to the payload BEFORE encryption.
+		// We create a slice sized [2 bytes for length] + [Payload]
+		plaintext := make([]byte, 2+len(payload))
+
+		// Write inner length (size of the actual message)
+		binary.LittleEndian.PutUint16(plaintext, uint16(len(payload)))
+		// Copy payload after the first 2 bytes
+		copy(plaintext[2:], payload)
+
+		// 2. Encrypt the combined block (InnerLength + Payload)
+		// 'dataToSend' will now contain the encrypted bytes (likely padded)
+		dataToSend, err = crypto.EncryptXTEA(plaintext, c.XTEAKey)
 		if err != nil {
 			return err
 		}
 	} else {
-		finalPayload = payload
+		// If encryption is off, we just send the raw payload.
+		dataToSend = payload
 	}
 
-	length := uint16(len(finalPayload))
-	// Write the 2-byte length prefix.
-	if err := binary.Write(c.conn, binary.LittleEndian, length); err != nil {
+	// 3. Calculate the TCP Frame Length.
+	// This tells the receiver how many bytes to read from the socket.
+	// - If Encrypted: Length of the Ciphertext (includes padding + inner length).
+	// - If Raw: Length of the Payload.
+	frameLength := uint16(len(dataToSend))
+
+	// 4. Write the Frame Length (Header)
+	// Optimized: Use stack array instead of binary.Write to avoid allocations.
+	header := [2]byte{}
+	binary.LittleEndian.PutUint16(header[:], frameLength)
+
+	// Write Header
+	if _, err := c.conn.Write(header[:]); err != nil {
 		return err
 	}
 
-	_, err = c.conn.Write(finalPayload)
+	// 5. Write Body (Encrypted blob or Raw payload)
+	_, err = c.conn.Write(dataToSend)
 	return err
 }
 

@@ -12,9 +12,6 @@ type PacketWriter struct {
 
 func NewPacketWriter() *PacketWriter {
 	p := &PacketWriter{buff: new(bytes.Buffer)}
-	// Reserve the first 2 bytes for the length header.
-	// We write 0s for now; we don't update a 'length' counter manually.
-	p.buff.Write([]byte{0, 0})
 	return p
 }
 
@@ -78,18 +75,6 @@ func (pw *PacketWriter) GetBytes() ([]byte, error) {
 	}
 
 	finalBytes := pw.buff.Bytes()
-
-	// Calculate payload length.
-	// Total Length - 2 bytes (header) = Payload Length
-	totalLen := len(finalBytes)
-	if totalLen < 2 {
-		return finalBytes, nil // Should not happen due to Constructor
-	}
-
-	payloadLen := totalLen - 2
-
-	// Backfill the first 2 bytes
-	binary.LittleEndian.PutUint16(finalBytes[0:2], uint16(payloadLen))
 
 	return finalBytes, nil
 }

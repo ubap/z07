@@ -3,10 +3,9 @@ package login
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+	"errors"
 	"goTibia/protocol"
 	"goTibia/protocol/crypto"
-	"io"
 )
 
 // Special packet - first received from the client during login.
@@ -55,59 +54,34 @@ func (lp *ClientCredentialPacket) Marshal() ([]byte, error) {
 	return fullPacket.Bytes(), nil
 }
 
-func ParseCredentialsPacket(data []byte) (*ClientCredentialPacket, error) {
-	// Use a bytes.Reader to treat the byte slice like a file or network stream.
-	// This makes it easy to read structured data sequentially.
-	reader := bytes.NewReader(data)
+func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredentialPacket, error) {
 	packet := &ClientCredentialPacket{}
 
-	// --- 1. Read the Unencrypted Header ---
-	// We read each field in order, using binary.Read for fixed-size data.
-	// The byte order must be LittleEndian, which is standard for this protocol.
-	if err := binary.Read(reader, binary.LittleEndian, &packet.Protocol); err != nil {
-		return nil, fmt.Errorf("failed to read protocol version: %w", err)
-	}
-	if err := binary.Read(reader, binary.LittleEndian, &packet.ClientOS); err != nil {
-		return nil, fmt.Errorf("failed to read client os: %w", err)
-	}
-	if err := binary.Read(reader, binary.LittleEndian, &packet.ClientVersion); err != nil {
-		return nil, fmt.Errorf("failed to read client version: %w", err)
-	}
-	if err := binary.Read(reader, binary.LittleEndian, &packet.DatSignature); err != nil {
-		return nil, fmt.Errorf("failed to read dat signature: %w", err)
-	}
-	if err := binary.Read(reader, binary.LittleEndian, &packet.SprSignature); err != nil {
-		return nil, fmt.Errorf("failed to read spr signature: %w", err)
-	}
-	if err := binary.Read(reader, binary.LittleEndian, &packet.PicSignature); err != nil {
-		return nil, fmt.Errorf("failed to read pic signature: %w", err)
-	}
+	packet.Protocol = packetReader.ReadByte()
+	packet.ClientOS = packetReader.ReadUint16()
+	packet.ClientVersion = packetReader.ReadUint16()
+	packet.DatSignature = packetReader.ReadUint32()
+	packet.SprSignature = packetReader.ReadUint32()
+	packet.PicSignature = packetReader.ReadUint32()
 
-	// --- 2. Decrypt the Remainder of the Packet ---
-	encryptedBlock, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read encrypted block: %w", err)
+	encryptedBlock := packetReader.ReadAll()
+	if packetReader.Err() != nil {
+		return nil, packetReader.Err()
 	}
 
 	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
-
-	messagePayload := bytes.TrimLeft(decryptedBlock, "\x00")
-
-	// Now, create a reader from the clean, left-aligned payload.
-	decryptedReader := bytes.NewReader(messagePayload)
-
-	if err := binary.Read(decryptedReader, binary.LittleEndian, &packet.XTEAKey); err != nil {
-		return nil, fmt.Errorf("failed to read xtea key from decrypted block: %w", err)
-	}
-	if err := binary.Read(decryptedReader, binary.LittleEndian, &packet.AccountNumber); err != nil {
-		return nil, fmt.Errorf("failed to read account number from decrypted block: %w", err)
+	decryptedBlockReader := protocol.NewPacketReader(decryptedBlock)
+	checkByte := decryptedBlockReader.ReadByte()
+	if checkByte != 0x00 {
+		return nil, errors.New("invalid checkByte")
 	}
 
-	password, err := protocol.ReadString(decryptedReader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse password: %w", err)
-	}
-	packet.Password = password
+	packet.XTEAKey[0] = decryptedBlockReader.ReadUint32()
+	packet.XTEAKey[1] = decryptedBlockReader.ReadUint32()
+	packet.XTEAKey[2] = decryptedBlockReader.ReadUint32()
+	packet.XTEAKey[3] = decryptedBlockReader.ReadUint32()
+	packet.AccountNumber = decryptedBlockReader.ReadUint32()
+	packet.Password = decryptedBlockReader.ReadString()
 
 	return packet, nil
 }

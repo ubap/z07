@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	log2 "goTibia/log"
 	"goTibia/protocol"
 	"io"
 	"log"
@@ -71,10 +70,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	dumper := &log2.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
-	dumper.Write(message)
-
-	resultMessage, err := s.receiveLoginResultMessage(message)
+	resultMessage, err := s.receiveLoginResultMessage(message.ReadAll())
 	if err != nil {
 		return
 	}
@@ -90,7 +86,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 }
 
 func (s *Server) receiveCredentialsMessage(client *protocol.Connection) (*ClientCredentialPacket, error) {
-	messageBytes, err := client.ReadMessage()
+	packetReader, err := client.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
 			return nil, fmt.Errorf("client disconnected before sending login packet")
@@ -98,7 +94,7 @@ func (s *Server) receiveCredentialsMessage(client *protocol.Connection) (*Client
 		return nil, fmt.Errorf("error reading message: %w", err)
 	}
 
-	packet, err := ParseCredentialsPacket(messageBytes)
+	packet, err := ParseCredentialsPacket(packetReader)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing credentials packet: %w", err)
 	}

@@ -1,6 +1,7 @@
 package login
 
 import (
+	"goTibia/protocol"
 	"goTibia/protocol/crypto"
 	"testing"
 
@@ -26,7 +27,8 @@ func Test(t *testing.T) {
 	marshal, err := packet.Marshal()
 	require.NoError(t, err, "Marshalling login packet should not fail")
 
-	loginPacket, err := ParseCredentialsPacket(marshal)
+	reader := protocol.NewPacketReader(marshal)
+	loginPacket, err := ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
@@ -49,7 +51,8 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 		0x6d,
 	}
 
-	packet, err := ParseCredentialsPacket(capturedPacket)
+	reader := protocol.NewPacketReader(capturedPacket)
+	packet, err := ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	expected := ClientCredentialPacket{
