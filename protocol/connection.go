@@ -48,6 +48,7 @@ func (c *Connection) ReadMessage() ([]byte, error) {
 	return payload, nil
 }
 
+// Responsible for framing, encrypting (if enabled), and sending a message.
 func (c *Connection) WriteMessage(payload []byte) error {
 	var finalPayload []byte
 	var err error

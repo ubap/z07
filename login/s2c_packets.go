@@ -1,7 +1,6 @@
 package login
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"goTibia/protocol"
@@ -21,39 +20,19 @@ type LoginResultMessage struct {
 }
 
 func (lp *LoginResultMessage) Marshal() ([]byte, error) {
-	buf := new(bytes.Buffer)
+	pw := protocol.NewPacketWriter()
 
-	// 2. Write a 2-byte (uint16) placeholder for the length. We'll overwrite it later.
-	// We write two zero bytes for now.
-	err := binary.Write(buf, binary.LittleEndian, uint16(0))
-	if err != nil {
-		return nil, err
-	}
-
-	// 3. Write the actual message payload.
 	if lp.ClientDisconnected {
-		buf.WriteByte(S2COpcodeDisconnectClient)
-		protocol.WriteString(buf, lp.ClientDisconnectedReason)
+		pw.WriteByte(S2COpcodeDisconnectClient)
+		pw.WriteString(lp.ClientDisconnectedReason)
 	}
 
 	if lp.CharacterList != nil {
-		buf.WriteByte(S2COpcodeCharacterList)
-		err := WriteCharacterList(buf, lp.CharacterList)
-		if err != nil {
-			return nil, err
-		}
+		pw.WriteByte(S2COpcodeCharacterList)
+		WriteCharacterList(pw, lp.CharacterList)
 	}
 
-	// 4. Get the final byte slice from the buffer.
-	finalBytes := buf.Bytes()
-
-	// 5. Calculate the length of the PAYLOAD (total length minus the 2 placeholder bytes).
-	payloadLength := len(finalBytes) - 2
-
-	binary.LittleEndian.PutUint16(finalBytes, uint16(payloadLength))
-
-	// 7. Return the complete message with the correct length prefix.
-	return finalBytes, nil
+	return pw.GetBytes()
 }
 
 // endregion LoginResultMessage
@@ -110,38 +89,19 @@ func ReadCharacterList(r io.Reader) (*CharacterList, error) {
 	return &CharacterList{Characters: characterEntries, PremiumDays: premiumDays}, nil
 }
 
-func WriteCharacterEntry(w io.Writer, entry *CharacterEntry) error {
-	if err := protocol.WriteString(w, entry.Name); err != nil {
-		return err
-	}
-	if err := protocol.WriteString(w, entry.WorldName); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, entry.WorldIp); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, entry.WorldPort); err != nil {
-		return err
-	}
-	return nil
+func WriteCharacterEntry(pw *protocol.PacketWriter, entry *CharacterEntry) {
+	pw.WriteString(entry.Name)
+	pw.WriteString(entry.WorldName)
+	pw.WriteUint32(entry.WorldIp)
+	pw.WriteUint16(entry.WorldPort)
 }
 
-func WriteCharacterList(w io.Writer, charList *CharacterList) error {
-	entryCount := uint8(len(charList.Characters))
-	if err := binary.Write(w, binary.LittleEndian, entryCount); err != nil {
-		return err
-	}
-
+func WriteCharacterList(pw *protocol.PacketWriter, charList *CharacterList) {
+	pw.WriteByte(uint8(len(charList.Characters)))
 	for _, entry := range charList.Characters {
-		if err := WriteCharacterEntry(w, entry); err != nil {
-			return err
-
-		}
+		WriteCharacterEntry(pw, entry)
 	}
-	if err := binary.Write(w, binary.LittleEndian, charList.PremiumDays); err != nil {
-		return err
-	}
-	return nil
+	pw.WriteUint16(charList.PremiumDays)
 }
 
 // endregion CharacterList
