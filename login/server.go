@@ -46,14 +46,19 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	defer protoClientConn.Close()
 	log.Printf("Login: Accepted connection from %s", protoClientConn.RemoteAddr())
 
-	// Phase 1: Receive and Decode
-	loginPacket, err := s.receiveCredentialsMessage(protoClientConn)
+	packetReader, err := protoClientConn.ReadMessage()
 	if err != nil {
-		log.Printf("Login: Failed to process credentials packet from %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("error reading message from %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	// Phase 2: Forward and Re-encode
+	loginPacket, err := ParseCredentialsPacket(packetReader)
+	if err != nil {
+		log.Printf("Login: Failed to parse login packet: %v", err)
+		return
+	}
+
+	// TODO Rename, struct more meaningfully
 	protoServerConn, err := s.forwardLoginPacket(loginPacket)
 	if err != nil {
 		log.Printf("Login: Failed to forward credentials packet for %s: %v", protoClientConn.RemoteAddr(), err)
@@ -83,25 +88,6 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	protoClientConn.WriteMessage(marshal)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
-}
-
-func (s *Server) receiveCredentialsMessage(client *protocol.Connection) (*ClientCredentialPacket, error) {
-	packetReader, err := client.ReadMessage()
-	if err != nil {
-		if err == io.EOF {
-			return nil, fmt.Errorf("client disconnected before sending login packet")
-		}
-		return nil, fmt.Errorf("error reading message: %w", err)
-	}
-
-	packet, err := ParseCredentialsPacket(packetReader)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing credentials packet: %w", err)
-	}
-
-	log.Printf("Login: Successfully decrypted packet: Account=%d, Password='%s'",
-		packet.AccountNumber, packet.Password)
-	return packet, nil
 }
 
 // forwardLoginPacket connects to the real server and sends the re-encoded packet.

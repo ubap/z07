@@ -83,5 +83,5 @@ func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredent
 	packet.AccountNumber = decryptedBlockReader.ReadUint32()
 	packet.Password = decryptedBlockReader.ReadString()
 
-	return packet, nil
+	return packet, packetReader.Err()
 }
