@@ -1,29 +1,38 @@
 package main
 
 import (
-	"goTibia/game_server"
-	"goTibia/login_server"
+	"goTibia/handlers/game"
+	"goTibia/handlers/login"
+	"goTibia/proxy"
 	"log"
+	"sync"
 )
 
 func main() {
-	loginServer := login_server.NewServer(":7171", "world.fibula.app:7171")
-	gameServer := game_server.NewServer(":7172", "world.fibula.app:7172")
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	go func() {
-		log.Println("Starting login server...")
-		if err := loginServer.Start(); err != nil {
-			log.Fatalf("Login server failed: %v", err)
-		}
+		defer wg.Done()
+		srv := proxy.NewServer(
+			"Login",
+			":7171",
+			"world.fibula.app:7171",
+			login.HandleLoginLogic,
+		)
+		log.Fatal(srv.Start())
 	}()
 
 	go func() {
-		log.Println("Starting game server...")
-		if err := gameServer.Start(); err != nil {
-			log.Fatalf("Game server failed: %v", err)
-		}
+		defer wg.Done()
+		srv := proxy.NewServer(
+			"Game",
+			":7172",
+			"world.fibula.app:7172",
+			game.HandleGameConnection,
+		)
+		log.Fatal(srv.Start())
 	}()
 
-	// select {} is a common way to block forever.
-	select {}
+	wg.Wait()
 }
