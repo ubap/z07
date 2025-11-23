@@ -37,6 +37,14 @@ func (pr *PacketReader) ReadByte() uint8 {
 	return b
 }
 
+func (pr *PacketReader) ReadBool() bool {
+	if pr.err != nil {
+		return false
+	}
+
+	return pr.ReadByte() != 0
+}
+
 // ReadUint16 reads a uint16 (LittleEndian). Returns 0 on error.
 func (pr *PacketReader) ReadUint16() uint16 {
 	if pr.err != nil {
