@@ -1,6 +1,7 @@
-package packets
+package packets_test
 
 import (
+	"goTibia/packets"
 	"goTibia/protocol"
 	"goTibia/protocol/crypto"
 	"testing"
@@ -8,11 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test(t *testing.T) {
+func Test_Encode_Parse(t *testing.T) {
 	// We want to use the known test RSA keys so we can decrypt the packet
+	originalKey := crypto.RSA.GameServerPublicKey
+	defer func() { crypto.RSA.GameServerPublicKey = originalKey }()
 	crypto.RSA.GameServerPublicKey = &crypto.RSA.ClientPrivateKey.PublicKey
 
-	packet := ClientCredentialPacket{
+	packet := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      65535,
 		ClientVersion: 1234,
@@ -24,11 +27,13 @@ func Test(t *testing.T) {
 		Password:      "secret",
 	}
 
-	encoded, err := packet.Encode()
-	require.NoError(t, err, "Encoding login packet should not fail")
+	pw := protocol.NewPacketWriter()
+	packet.Encode(pw)
+	bytes, err := pw.GetBytes()
+	require.NoError(t, err, "Getting bytes from packet writer should not fail")
 
-	reader := protocol.NewPacketReader(encoded)
-	loginPacket, err := ParseCredentialsPacket(reader)
+	reader := protocol.NewPacketReader(bytes)
+	loginPacket, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
@@ -52,10 +57,10 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 	}
 
 	reader := protocol.NewPacketReader(capturedPacket)
-	packet, err := ParseCredentialsPacket(reader)
+	packet, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
-	expected := ClientCredentialPacket{
+	expected := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      2,
 		ClientVersion: 772,
