@@ -48,7 +48,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	_, err = game.ParseCredentialsPacket(packetReader)
+	_, err = game.ParseLoginRequest(packetReader)
 	if err != nil {
 		log.Printf("Login: Failed to parse login packet: %v", err)
 		return

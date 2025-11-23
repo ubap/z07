@@ -6,8 +6,8 @@ import (
 	"goTibia/protocol/crypto"
 )
 
-// ClientCredentialPacket is a special packet. It's the first packet sent by the client to the server
-type ClientCredentialPacket struct {
+// LoginRequest is a special packet. It's the first packet sent by the client to the server
+type LoginRequest struct {
 	Protocol      uint8
 	ClientOS      uint16
 	ClientVersion uint16
@@ -19,8 +19,8 @@ type ClientCredentialPacket struct {
 	Password      string
 }
 
-func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredentialPacket, error) {
-	packet := &ClientCredentialPacket{}
+func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, error) {
+	packet := &LoginRequest{}
 
 	packet.Protocol = packetReader.ReadByte()
 	packet.ClientOS = packetReader.ReadUint16()
