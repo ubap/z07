@@ -1,10 +1,12 @@
 package game_server
 
 import (
+	"fmt"
 	"goTibia/packets/game"
 	"goTibia/protocol"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -54,4 +56,20 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
+	protoServerConn, err := s.connectToServer()
+	if err != nil {
+		log.Printf("Login: Failed to connect to %s: %v", protoClientConn.RemoteAddr(), err)
+		return
+	}
+	defer protoServerConn.Close()
+
+}
+
+func (s *Server) connectToServer() (*protocol.Connection, error) {
+	conn, err := net.DialTimeout("tcp", s.RealServerAddr, 5*time.Second)
+	if err != nil {
+		return nil, fmt.Errorf("backend unavailable at %s: %w", s.RealServerAddr, err)
+	}
+
+	return protocol.NewConnection(conn), nil
 }
