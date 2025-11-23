@@ -29,10 +29,11 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 		return
 	}
 
-	_, err = game.ParseLoginResultMessage(message)
+	loginResult, err := game.ParseLoginResultMessage(message)
 	if err != nil {
 		log.Printf("Game: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
 		return
 	}
 
+	log.Printf("Game: PlayerId: %d", loginResult.PlayerId)
 }
