@@ -62,17 +62,24 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
 	for {
 		// 1. Read Raw Encrypted Message
-		rawMsg, _, err := src.ReadMessage()
+		rawMsg, packetReader, err := src.ReadMessage()
 		if err != nil {
 			errChan <- fmt.Errorf("%s Read Error: %w", tag, err)
 			return
 		}
 
-		//opcode := packetReader.ReadByte()
-		//packet, err := game.ParseClientPacket(opcode, packetReader)
-		//if err != nil {
-		//
-		//}
+		if tag == "C2S" {
+			for packetReader.Remaining() > 0 {
+				opcode := packetReader.ReadByte()
+				packet, err := game.ParseS2CPacket(opcode, packetReader)
+				if err != nil {
+					log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
+					break
+				}
+				log.Printf("[Game] Received game message: %v", packet)
+			}
+		}
+
 		// 2. Forward to Destination
 		if err := dst.WriteMessage(rawMsg); err != nil {
 			errChan <- fmt.Errorf("%s Write Error: %w", tag, err)
