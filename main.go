@@ -12,13 +12,21 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	loginHandler := &login.LoginHandler{
+		TargetAddr: "world.fibula.app:7171",
+		ProxyMOTD:  "Welcome to GoTibia Proxy!",
+	}
+
+	gameHandler := &game.GameHandler{
+		TargetAddr: "world.fibula.app:7171",
+	}
+
 	go func() {
 		defer wg.Done()
 		srv := proxy.NewServer(
 			"Login",
 			":7171",
-			"world.fibula.app:7171",
-			login.HandleLoginLogic,
+			loginHandler,
 		)
 		log.Fatal(srv.Start())
 	}()
@@ -28,8 +36,7 @@ func main() {
 		srv := proxy.NewServer(
 			"Game",
 			":7172",
-			"world.fibula.app:7172",
-			game.HandleGameConnection,
+			gameHandler,
 		)
 		log.Fatal(srv.Start())
 	}()

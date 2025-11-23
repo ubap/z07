@@ -8,21 +8,21 @@ import (
 	"time"
 )
 
-type HandlerFunc func(clientConn *protocol.Connection, targetAddr string)
-
-type Server struct {
-	Name           string
-	ListenAddr     string
-	RealServerAddr string
-	Handler        HandlerFunc
+type ConnectionHandler interface {
+	Handle(client *protocol.Connection)
 }
 
-func NewServer(name, listenAddr, realAddr string, handler HandlerFunc) *Server {
+type Server struct {
+	Name       string
+	ListenAddr string
+	Handler    ConnectionHandler
+}
+
+func NewServer(name, listenAddr string, handler ConnectionHandler) *Server {
 	return &Server{
-		Name:           name,
-		ListenAddr:     listenAddr,
-		RealServerAddr: realAddr,
-		Handler:        handler,
+		Name:       name,
+		ListenAddr: listenAddr,
+		Handler:    handler,
 	}
 }
 
@@ -33,7 +33,7 @@ func (s *Server) Start() error {
 	}
 	defer listener.Close()
 
-	log.Printf("[%s] Proxy listening on %s -> %s", s.Name, s.ListenAddr, s.RealServerAddr)
+	log.Printf("[%s] Proxy listening on %s", s.Name, s.ListenAddr)
 
 	for {
 		conn, err := listener.Accept()
@@ -49,7 +49,7 @@ func (s *Server) Start() error {
 		go func() {
 			defer protoConn.Close()
 			// We pass the RealServerAddr so the handler knows where to dial
-			s.Handler(protoConn, s.RealServerAddr)
+			s.Handler.Handle(protoConn)
 		}()
 	}
 }

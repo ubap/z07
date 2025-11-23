@@ -7,7 +7,12 @@ import (
 	"log"
 )
 
-func HandleGameConnection(client *protocol.Connection, targetAddr string) {
+type GameHandler struct {
+	TargetAddr string
+	// You could add "DB *sql.DB" here later!
+}
+
+func (h *GameHandler) Handle(client *protocol.Connection) {
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
 	packetReader, err := client.ReadMessage()
@@ -22,7 +27,7 @@ func HandleGameConnection(client *protocol.Connection, targetAddr string) {
 		return
 	}
 
-	protoServerConn, err := proxy.ConnectToBackend(targetAddr)
+	protoServerConn, err := proxy.ConnectToBackend(h.TargetAddr)
 	if err != nil {
 		log.Printf("Login: Failed to connect to %s: %v", client.RemoteAddr(), err)
 		return

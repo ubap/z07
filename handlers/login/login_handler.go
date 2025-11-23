@@ -9,7 +9,13 @@ import (
 	"time"
 )
 
-func HandleLoginLogic(client *protocol.Connection, targetAddr string) {
+type LoginHandler struct {
+	TargetAddr string
+	ProxyMOTD  string
+	// You could add "DB *sql.DB" here later!
+}
+
+func (h *LoginHandler) Handle(client *protocol.Connection) {
 	log.Printf("[Login] New Connection: %s", client.RemoteAddr())
 
 	packetReader, err := client.ReadMessage()
@@ -24,7 +30,7 @@ func HandleLoginLogic(client *protocol.Connection, targetAddr string) {
 		return
 	}
 
-	protoServerConn, err := proxy.ConnectToBackend(targetAddr)
+	protoServerConn, err := proxy.ConnectToBackend(h.TargetAddr)
 	if err != nil {
 		log.Printf("Login: Failed to connect to %s: %v", client.RemoteAddr(), err)
 		return
@@ -53,7 +59,7 @@ func HandleLoginLogic(client *protocol.Connection, targetAddr string) {
 		return
 	}
 
-	injectMotd(loginResultMessage)
+	injectMotd(loginResultMessage, h.ProxyMOTD)
 	injectProxyGameworldIP(loginResultMessage)
 
 	err = client.SendPacket(loginResultMessage)
@@ -65,10 +71,10 @@ func HandleLoginLogic(client *protocol.Connection, targetAddr string) {
 	log.Printf("Login: Connection for %s finished.", client.RemoteAddr())
 }
 
-func injectMotd(message *loginpkt.LoginResultMessage) {
+func injectMotd(message *loginpkt.LoginResultMessage, motd string) {
 	message.Motd = &loginpkt.Motd{
 		MotdId:  strconv.Itoa(int(time.Now().Unix())),
-		Message: "Welcome to the go-tibia!\nImprove your go coding skills!",
+		Message: motd,
 	}
 }
 
