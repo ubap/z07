@@ -139,6 +139,25 @@ func (pr *PacketReader) ReadAll() []byte {
 	return buf
 }
 
+func (pr *PacketReader) PeekUint16() (uint16, error) {
+	// bytes.Reader doesn't support Peek natively nicely,
+	// but we can ReadAt without advancing.
+	// OR, more simply, Read and then Unread/Seek back.
+
+	if pr.reader.Len() < 2 {
+		return 0, io.EOF
+	}
+
+	// Read 2 bytes
+	var b [2]byte
+	_, err := pr.reader.ReadAt(b[:], 0) // ReadAt does not advance cursor
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.LittleEndian.Uint16(b[:]), nil
+}
+
 func (pr *PacketReader) Remaining() int {
 	return pr.reader.Len()
 }

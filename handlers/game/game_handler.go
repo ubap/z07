@@ -94,7 +94,7 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 			h.processPacketFromServer(packet)
 		}
 		if err != nil {
-			// log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
+			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
 		}
 		h.processPacketFromServer(packet)
@@ -108,5 +108,7 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 		h.State.SetPlayerId(p.PlayerId)
 	case *game.MapDescription:
 		h.State.SetPosition(p.Pos)
+	case *game.MoveCreatureMsg:
+		log.Printf("[Game] MoveCreatureMsg %v", p)
 	}
 }

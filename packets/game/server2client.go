@@ -16,6 +16,22 @@ type MapDescription struct {
 	Pos types.Position
 }
 
+type MoveCreatureMsg struct {
+	// The destination is always present
+	ToPos types.Position
+
+	// --- CONDITIONAL FIELDS ---
+	// Branch A: We know the exact tile and stack position (OldPos < 10)
+	FromPos      types.Position
+	FromStackPos int8 // -1 if not set
+
+	// Branch B: We only know the Creature ID (OldPos >= 10 or off-screen)
+	CreatureID uint32 // 0 if not set
+
+	// Helper to let logic know which fields to use
+	KnownSourcePosition bool // True if FromPos/StackPos is valid. False if CreatureID is valid.
+}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
@@ -32,4 +48,47 @@ func ParseMapDescription(pr *protocol.PacketReader) (*MapDescription, error) {
 
 func ParsePlayerStats(pr *protocol.PacketReader) (*MapDescription, error) {
 	return nil, ErrUnknownOpcode
+}
+
+func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
+	msg := &MoveCreatureMsg{
+		FromStackPos: -1,
+	}
+
+	// 1. Peek at the next 2 bytes.
+	// In C++: msg.add<uint16_t>(0xFFFF)
+	peekVal, err := pr.PeekUint16()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Decide which branch to parse
+	if peekVal == 0xFFFF {
+		// --- BRANCH B: Unknown Position (CreatureID) ---
+		_ = pr.ReadUint16() // Consume the 0xFFFF marker
+
+		msg.CreatureID = pr.ReadUint32()
+		msg.KnownSourcePosition = false
+
+		// In this branch, C++ does NOT send FromPos or StackPos
+	} else {
+		// --- BRANCH A: KnownSourcePosition  ---
+
+		// Read FromPos (X, Y, Z)
+		msg.FromPos.X = pr.ReadUint16()
+		msg.FromPos.Y = pr.ReadUint16()
+		msg.FromPos.Z = pr.ReadByte()
+
+		// Read StackPos
+		// In C++, this is msg.addByte(oldStackPos)
+		msg.FromStackPos = int8(pr.ReadByte())
+		msg.KnownSourcePosition = true
+	}
+
+	// 3. Read Destination (Always present)
+	msg.ToPos.X = pr.ReadUint16()
+	msg.ToPos.Y = pr.ReadUint16()
+	msg.ToPos.Z = pr.ReadByte()
+
+	return msg, nil
 }
