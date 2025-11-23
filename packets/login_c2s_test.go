@@ -102,3 +102,32 @@ func TestParseCredentials_WrongRSAKey(t *testing.T) {
 	require.Error(t, err, "Should fail when RSA keys do not match")
 	require.Contains(t, err.Error(), "invalid checkByte")
 }
+
+func TestParseCredentials_TruncatedPacket(t *testing.T) {
+	// Generate a valid packet
+	packet := packets.ClientCredentialPacket{
+		Protocol:      1,
+		ClientOS:      65535,
+		ClientVersion: 1234,
+		DatSignature:  7,
+		SprSignature:  8,
+		PicSignature:  9,
+		XTEAKey:       [4]uint32{17, 18, 19, 20},
+		AccountNumber: 42,
+		Password:      "secret",
+	}
+	pw := protocol.NewPacketWriter()
+	packet.Encode(pw)
+	fullBytes, _ := pw.GetBytes()
+
+	// Cut it in half (simulate network cut)
+	truncatedBytes := fullBytes[:len(fullBytes)/2]
+
+	// Attempt parse
+	reader := protocol.NewPacketReader(truncatedBytes)
+	result, err := packets.ParseCredentialsPacket(reader)
+
+	// Assert
+	require.Error(t, err)
+	require.Nil(t, result)
+}
