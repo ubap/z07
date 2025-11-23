@@ -33,6 +33,10 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 		return ParseMagicEffect(pr)
 	case S2CRemoveTileThing:
 		return ParseRemoveTileThing(pr)
+	case S2CCreatureLight:
+		return ParseCreatureLight(pr)
+	case S2CCreatureHealth:
+		return ParseCreatureHealth(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

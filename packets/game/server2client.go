@@ -36,7 +36,7 @@ type PingMsg struct{}
 
 type MagicEffect struct {
 	Pos  types.Position
-	Type byte
+	Type uint8
 }
 
 type RemoveTileCreatureMsg struct {
@@ -46,6 +46,17 @@ type RemoveTileCreatureMsg struct {
 type RemoveTileThingMsg struct {
 	Pos      types.Position
 	StackPos uint8
+}
+
+type CreatureLightMsg struct {
+	CreatureID uint32
+	LightLevel uint8
+	Color      uint8
+}
+
+type CreatureHealthMsg struct {
+	CreatureID uint32
+	Hppc       uint8
 }
 
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
@@ -141,4 +152,21 @@ func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
 	msg.StackPos = pr.ReadByte()
 
 	return msg, nil
+}
+
+func ParseCreatureLight(pr *protocol.PacketReader) (*CreatureLightMsg, error) {
+	cl := &CreatureLightMsg{}
+	cl.CreatureID = pr.ReadUint32()
+	cl.LightLevel = pr.ReadByte()
+	cl.Color = pr.ReadByte()
+
+	return cl, nil
+}
+
+func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) {
+	cl := &CreatureHealthMsg{}
+	cl.CreatureID = pr.ReadUint32()
+	cl.Hppc = pr.ReadByte()
+
+	return cl, nil
 }
