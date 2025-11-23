@@ -31,7 +31,7 @@ func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 
 	if lp.CharacterList != nil {
 		pw.WriteByte(S2COpcodeCharacterList)
-		WriteCharacterList(pw, lp.CharacterList)
+		writeCharacterList(pw, lp.CharacterList)
 	}
 }
 
@@ -53,14 +53,14 @@ func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResultMessage, er
 			message.ClientDisconnectedReason = disconnectedReason
 
 		case S2COpcodeMOTD:
-			motd, err := ParseMotd(pr)
+			motd, err := parseMotd(pr)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse MOTD: %w", err)
 			}
 			message.Motd = motd
 
 		case S2COpcodeCharacterList:
-			charList, err := ParseCharacterList(pr)
+			charList, err := parseCharacterList(pr)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse CharList: %w", err)
 			}
@@ -93,7 +93,7 @@ type CharacterEntry struct {
 	WorldPort uint16
 }
 
-func ParseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
+func parseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
 	entryCount := packetReader.ReadByte()
 
 	characterEntries := make([]*CharacterEntry, entryCount)
@@ -116,17 +116,17 @@ func ParseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, er
 	return &CharacterList{Characters: characterEntries, PremiumDays: premiumDays}, packetReader.Err()
 }
 
-func WriteCharacterEntry(pw *protocol.PacketWriter, entry *CharacterEntry) {
+func writeCharacterEntry(pw *protocol.PacketWriter, entry *CharacterEntry) {
 	pw.WriteString(entry.Name)
 	pw.WriteString(entry.WorldName)
 	pw.WriteUint32(entry.WorldIp)
 	pw.WriteUint16(entry.WorldPort)
 }
 
-func WriteCharacterList(pw *protocol.PacketWriter, charList *CharacterList) {
+func writeCharacterList(pw *protocol.PacketWriter, charList *CharacterList) {
 	pw.WriteByte(uint8(len(charList.Characters)))
 	for _, entry := range charList.Characters {
-		WriteCharacterEntry(pw, entry)
+		writeCharacterEntry(pw, entry)
 	}
 	pw.WriteUint16(charList.PremiumDays)
 }
@@ -140,7 +140,7 @@ type Motd struct {
 	Message string
 }
 
-func ParseMotd(packetReader *protocol.PacketReader) (*Motd, error) {
+func parseMotd(packetReader *protocol.PacketReader) (*Motd, error) {
 	data := packetReader.ReadString()
 	if packetReader.Err() != nil {
 		return nil, packetReader.Err()
