@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"goTibia/game/state"
 	"goTibia/packets/game"
 	"goTibia/protocol"
 	"goTibia/proxy"
@@ -10,10 +11,13 @@ import (
 
 type GameHandler struct {
 	TargetAddr string
+	State      *state.GameState
 	// You could add "DB *sql.DB" here later!
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
+	h.State = state.New()
+
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
 	_, protoServerConn, err := proxy.InitSession(
@@ -61,29 +65,38 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 // pipe moves data from src to dst indefinitely.
 func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
 	for {
-		// 1. Read Raw Encrypted Message
+		// TODO: The proxy could forward raw, unecrypted message right away. This will reduce latency.
+		// Right now I can't think of a scenario where we want to edit game packets on the fly.
 		rawMsg, packetReader, err := src.ReadMessage()
 		if err != nil {
 			errChan <- fmt.Errorf("%s Read Error: %w", tag, err)
 			return
 		}
 
-		if tag == "C2S" {
-			for packetReader.Remaining() > 0 {
-				opcode := packetReader.ReadByte()
-				packet, err := game.ParseS2CPacket(opcode, packetReader)
-				if err != nil {
-					log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
-					break
-				}
-				log.Printf("[Game] Received game message: %v", packet)
-			}
+		if tag == "S2C" {
+			h.processPacketsFromServer(packetReader)
 		}
 
 		// 2. Forward to Destination
 		if err := dst.WriteMessage(rawMsg); err != nil {
 			errChan <- fmt.Errorf("%s Write Error: %w", tag, err)
 			return
+		}
+	}
+}
+
+func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
+	for packetReader.Remaining() > 0 {
+		opcode := packetReader.ReadByte()
+		packet, err := game.ParseS2CPacket(opcode, packetReader)
+		if err != nil {
+			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
+			break
+		}
+		switch p := packet.(type) {
+		case game.LoginResponse:
+			log.Printf("[Game] Received game message: %d", p.PlayerId)
+			h.State.SetPlayerId(p.PlayerId)
 		}
 	}
 }
