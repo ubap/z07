@@ -13,7 +13,7 @@ const (
 	outputFile = "RSA.txt"
 
 	// where is your Tibia client
-	inputFile = "/Users/jtrzebiatowski/programowanie_go/goTibia/resources/clients/Tibia.exe"
+	inputFile = "/Users/jtrzebiatowski/programowanie_go/goTibia/resources/772/Tibia.exe"
 
 	// this is most important, it assumes that RSA key is a string of 245 digits long or longer
 	// and no other string is so long like this one.
