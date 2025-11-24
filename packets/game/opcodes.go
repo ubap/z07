@@ -17,6 +17,7 @@ const (
 	S2CMapSliceWest    uint8 = 0x68
 	S2CRemoveTileThing uint8 = 0x6C
 	S2CMoveCreature    uint8 = 0x6D
+	S2CContainer       uint8 = 0x6E
 	S2CWorldLight      uint8 = 0x82
 	S2CMagicEffect     uint8 = 0x83
 	S2CCreatureHealth  uint8 = 0x8C

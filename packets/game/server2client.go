@@ -68,6 +68,10 @@ type PlayerIconsMsg struct {
 	Icons uint8
 }
 
+type ContainerMsg struct {
+	ContainerID uint8
+}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
