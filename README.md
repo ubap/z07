@@ -13,28 +13,46 @@ The bot needs to know about game physics (walls, stackable items).
 You need a modified client to connect to the bot.
 1.  Run the patcher, pointing to your Tibia installation:
     ```bash
-    go run cmd/tools/client_patcher.go -binary "C:\Games\Tibia772\Tibia.exe"
+    go run tools/client-patcher/main.go -binary "C:\Games\Tibia772\Tibia.exe"
     ```
 2.  This creates `Tibia_patched.exe` inside `C:\Games\Tibia772\`.
 3.  **Run `Tibia_patched.exe`** from that folder to play.
 
 ---
 
-### 💡 Developer Note: The RSA Key
-The patcher above replaces the client's public key with the standard "OTPublicRSA". For your Proxy to successfully decrypt the login packet, your Go code (`internal/crypto`) **must** be using the matching Private Key.
+### 🔑 RSA Key Finder (`rsa_finder.go`)
 
-If you haven't already, ensure your server code uses this Private Key (Standard OT Key):
+This tool scans a Tibia client binary to locate the RSA Public Key. It is useful if you are using a modified client or a different protocol version and need to find the memory offset for patching, or if you need to extract the original key to use in a server config.
 
-```go
-// internal/crypto/rsa.go
+#### Usage
 
-// Matches the Public Key injected by client_patcher.go
-var OTServPrivateKey = []byte{
-    // ... (The big private key definition) ...
-}
+**Basic Scan:**
+Searches `Tibia.exe` in the current folder and saves the key to `rsa_key.txt`.
+```bash
+go run tools/rsa-finder/main.go
 ```
 
-If these keys do not match, `ParseCredentialsPacket` will fail with "RSA encryption failed" or garbage data.
+**Custom Paths:**
+Specify a specific binary path and output location.
+```bash
+go run tools/rsa-finder/main.go --binary "C:\Games\Tibia772\Tibia.exe" --output "my_key.txt"
+```
+
+#### Output Explanation
+The tool will output the **File Offset** (Address) where the key starts.
+
+```text
+---------------------------------------------------
+Found RSA Key!
+File Offset (Decimal): 1422880
+File Offset (Hex):     0x15B620  <-- This is the address used in the Patcher
+Key Length:            309 digits
+---------------------------------------------------
+Key successfully saved to: RSA.txt
+```
+
+*   **For Patcher Developers:** Use the **Hex Offset** (`0x15B620`) to update the `RSAAddress` constant in `client_patcher.go` if you are supporting a new client version.
+*   **For Proxy Users:** The content of `rsa_key.txt` is the Public Key the client uses. The proxy must use this key to properly encrypt the communication with the server.
 
 
 ----
