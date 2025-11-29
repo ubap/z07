@@ -82,10 +82,6 @@ func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) 
 	return lr, pr.Err()
 }
 
-func ParseMapDescription(pr *protocol.PacketReader) (*MapDescription, error) {
-	return &MapDescription{Pos: readPosition(pr)}, ErrNotFullyImplemented
-}
-
 func ParsePlayerStats(pr *protocol.PacketReader) (*MapDescription, error) {
 	return nil, ErrUnknownOpcode
 }
@@ -210,4 +206,14 @@ func ParsePlayerIcons(pr *protocol.PacketReader) (*PlayerIconsMsg, error) {
 	pi.Icons = pr.ReadByte()
 
 	return pi, nil
+}
+
+type ServerClosedMsg struct {
+	Reason string
+}
+
+func ParseServerClosedMsg(pr *protocol.PacketReader) (*ServerClosedMsg, error) {
+	scm := &ServerClosedMsg{}
+	scm.Reason = pr.ReadString()
+	return scm, nil
 }

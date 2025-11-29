@@ -41,6 +41,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 		return ParseCreatureHealth(pr)
 	case S2CPlayerIcons:
 		return ParsePlayerIcons(pr)
+	case S2CServerClosed:
+		return ParseServerClosedMsg(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

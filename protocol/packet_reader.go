@@ -140,17 +140,19 @@ func (pr *PacketReader) ReadAll() []byte {
 }
 
 func (pr *PacketReader) PeekUint16() (uint16, error) {
-	// bytes.Reader doesn't support Peek natively nicely,
-	// but we can ReadAt without advancing.
-	// OR, more simply, Read and then Unread/Seek back.
-
 	if pr.reader.Len() < 2 {
 		return 0, io.EOF
 	}
 
-	// Read 2 bytes
+	// 1. Get the current position without moving the cursor
+	currentOffset, err := pr.reader.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0, err
+	}
+
+	// 2. ReadAt reads from the specific offset and does not advance the reader
 	var b [2]byte
-	_, err := pr.reader.ReadAt(b[:], 0) // ReadAt does not advance cursor
+	_, err = pr.reader.ReadAt(b[:], currentOffset)
 	if err != nil {
 		return 0, err
 	}
