@@ -254,11 +254,6 @@ func readOutfit(pr *protocol.PacketReader) error {
 		_ = pr.ReadByte() // Body
 		_ = pr.ReadByte() // Legs
 		_ = pr.ReadByte() // Feet
-
-		// WARNING: Check if your server sends Addons (0-3) here.
-		// Standard 7.72 usually does NOT send addons in LookType.
-		// However, TFS often backports 8.6 features.
-		// If you get desyncs here, try adding: _ = pr.ReadByte() // Addons
 	} else {
 		// Item Outfit (Chameleon Rune, etc.)
 		_ = pr.ReadUint16() // Look Item ID
