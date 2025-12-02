@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"goTibia/protocol"
 	"goTibia/types"
-	"log"
 )
 
 const (
@@ -79,8 +78,8 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 
 		if val >= 0xFF00 {
 			// --- SKIP (RLE) ---
-			_ = pr.ReadUint16()          // Consume the peeked value
-			skipCount := int(val & 0xFF) // Lower byte is count
+			_ = pr.ReadUint16()            // Consume the peeked value
+			skipCount := int(val&0xFF) + 1 // Lower byte is count, skip is 0 based counter
 
 			fmt.Printf("  [SKIP] Count: %d (Token: %04X) | Total Processed: %d\n", skipCount, val, tilesProcessed)
 
@@ -105,8 +104,6 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 			// Parse the items on this tile
 			tile := parseTile(pr, tilePos)
 			msg.Tiles = append(msg.Tiles, tile)
-
-			tilesProcessed++
 		}
 
 		// Check for Floor End
@@ -119,22 +116,6 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 				// We finished the last floor.
 				// Any remaining 'skip' count is irrelevant (padding).
 				fmt.Println("--- END MAP DEBUG (Success) ---")
-
-				// --- ADD THIS DEBUG BLOCK BEFORE RETURN ---
-				if pr.Remaining() > 0 {
-					peek, _ := pr.PeekBytes(5)
-					log.Printf("[CRITICAL FAILURE] Map Parser exited early!")
-					log.Printf("  > Bytes remaining: %d", pr.Remaining())
-					log.Printf("  > Next 5 bytes: % X", peek)
-					log.Printf("  > Last Tile Parsed: %v", msg.Tiles[len(msg.Tiles)-1].Position)
-
-					// Optional: Dump the last few tiles to see context
-					lastIdx := len(msg.Tiles) - 1
-					if lastIdx >= 0 {
-						t := msg.Tiles[lastIdx]
-						log.Printf("  > Last Item on Tile: %d", t.Items[len(t.Items)-1].ID)
-					}
-				}
 
 				return msg, nil
 			}
