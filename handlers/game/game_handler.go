@@ -100,7 +100,7 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 	case *game.MapDescription:
 		h.State.SetPosition(p.Pos)
 	case *game.MoveCreatureMsg:
-		//log.Printf("[Game] MoveCreatureMsg %v", p)
+		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *game.MagicEffect:
 		log.Printf("[Game] MagicEffect %v", p)
 	case *game.RemoveTileThingMsg:
@@ -115,6 +115,16 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 		log.Printf("[Game] PlayerIconsMsg %v", p)
 	case *game.ServerClosedMsg:
 		log.Printf("[Game] ServerClosedMsg %v", p)
+	case *game.AddTileThingMsg:
+		log.Printf("[Game] AddTileThingMsg %v", p)
+	case *game.AddInventoryItemMsg:
+		log.Printf("[Game] AddInventoryItemMsg %v", p)
+	case *game.RemoveInventoryItemMsg:
+		log.Printf("[Game] RemoveInventoryItemMsg %v", p)
+	case *game.PingMsg:
+		// Ignore
+	default:
+		log.Printf("[Game] Unhandled game packet type: %T", p)
 
 	}
 }

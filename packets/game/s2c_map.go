@@ -1,227 +1,232 @@
 package game
 
-//
-//type MapSliceMsg struct {
-//	Direction uint8 // 0=N, 1=E, 2=S, 3=W
-//	Tiles     []TileData
-//}
-//
-//type TileData struct {
-//	Position types.Position
-//	Ground   uint16 // ID of the ground
-//	Items    []ItemData
-//}
-//
-//type ItemData struct {
-//	ID    uint16
-//	Count uint8 // or SubType
-//}
-//
-//// MapDescriptionMsg contains the visible world data.
-//type MapDescriptionMsg struct {
-//	// We flatten the map into a slice for simpler access,
-//	// or you can use a 3D map/array.
-//	// Here we store a list of non-empty tiles.
-//	Tiles []TileData
-//}
-//
-//const (
-//	MapWidth  = 18
-//	MapHeight = 14
-//)
-//
-//// ParseMapDescriptionMsg reads the compressed map stream.
-//// clientPos is the player's current coordinate (needed to calculate offsets).
-//func ParseMapDescriptionMsg(pr *protocol.PacketReader, clientPos types.Position) (*MapDescriptionMsg, error) {
-//	msg := &MapDescriptionMsg{
-//		Tiles: make([]TileData, 0, MapWidth*MapHeight),
-//	}
-//
-//	// 1. Determine the Z-range exactly like the C++ code
-//	var startz, endz, zstep int
-//	z := int(clientPos.Z)
-//
-//	if z > 7 {
-//		startz = z - 2
-//		endz = z + 2
-//		// Clamp to max layers (usually 15 in Tibia)
-//		if endz > 15 {
-//			endz = 15
-//		}
-//		zstep = 1
-//	} else {
-//		startz = 7
-//		endz = 0
-//		zstep = -1
-//	}
-//
-//	// 2. Prepare the linear counters
-//	// The C++ code carries 'skip' across floors, so we must treat
-//	// the whole operation as filling a linear buffer of tiles.
-//
-//	currentFloor := startz
-//	tilesProcessedOnFloor := 0
-//	totalTilesOnFloor := MapWidth * MapHeight
-//
-//	// Loop until we have processed all floors
-//	for {
-//		// Calculate the offset for 3D perspective shifting
-//		// C++: GetFloorDescription(..., z - nz, ...)
-//		offset := z - currentFloor
-//
-//		// 3. Read the Token (Uint16 LittleEndian)
-//		// Tibia writes 2 bytes.
-//		// If Value >= 0xFF00, it is a SKIP (N tiles empty).
-//		// If Value < 0xFF00, it is a TILE (Value is the Ground ID).
-//		val := pr.ReadUint16()
-//		if err := pr.Err(); err != nil {
-//			return nil, err
-//		}
-//
-//		// --- CASE A: SKIP (RLE) ---
-//		if val >= 0xFF00 {
-//			skipCount := int(val & 0xFF) // The lower byte is the count
-//
-//			// Advance our logical cursor by 'skipCount' empty tiles
-//			for i := 0; i < skipCount; i++ {
-//				tilesProcessedOnFloor++
-//
-//				// Handle Floor Wrapping
-//				// If we skipped past the end of this floor, move to next floor
-//				if tilesProcessedOnFloor >= totalTilesOnFloor {
-//					currentFloor += zstep
-//					tilesProcessedOnFloor = 0
-//
-//					// Check if we are done with all floors
-//					if (zstep > 0 && currentFloor > endz) || (zstep < 0 && currentFloor < endz) {
-//						return msg, nil
-//					}
-//				}
-//			}
-//		} else {
-//			// --- CASE B: REAL TILE ---
-//			// 'val' is the Ground ID.
-//
-//			// 1. Calculate actual X,Y coordinates
-//			// The loop implies: nx goes 0..18, ny goes 0..14
-//			nx := tilesProcessedOnFloor / MapHeight // Note: Tibia loops X then Y, or Y then X?
-//			// C++: for nx (0..Width) { for ny (0..Height) }
-//			// This means Y is the inner loop.
-//			// So every increment moves Y. When Y fills Height, X increments.
-//
-//			realNx := tilesProcessedOnFloor / MapHeight
-//			realNy := tilesProcessedOnFloor % MapHeight
-//
-//			// Apply the offset (Perspective shift)
-//			tilePos := types.Position{
-//				X: uint16(int(clientPos.X) + realNx + offset),
-//				Y: uint16(int(clientPos.Y) + realNy + offset),
-//				Z: uint8(currentFloor),
-//			}
-//
-//			// 2. Parse the Tile Content
-//			tile := ParseTile(pr, val, tilePos)
-//			msg.Tiles = append(msg.Tiles, tile)
-//
-//			// 3. Advance Cursor (1 tile processed)
-//			tilesProcessedOnFloor++
-//			if tilesProcessedOnFloor >= totalTilesOnFloor {
-//				currentFloor += zstep
-//				tilesProcessedOnFloor = 0
-//
-//				if (zstep > 0 && currentFloor > endz) || (zstep < 0 && currentFloor < endz) {
-//					return msg, nil
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//func ParseMapSlice(opcode uint8, pr *protocol.PacketReader, clientPos types.Position) (*MapSliceMsg, error) {
-//	// These constants come from TFS/Client source (Map::maxClientViewportX)
-//	// Usually 18x14 view.
-//	var width, height int
-//
-//	switch opcode {
-//	case S2CMapSliceNorth: // 0x65
-//		width, height = 18, 1
-//	case S2CMapSliceEast: // 0x66
-//		width, height = 1, 14
-//	case S2CMapSliceSouth: // 0x67
-//		width, height = 18, 1
-//	case S2CMapSliceWest: // 0x68
-//		width, height = 1, 14
-//	}
-//
-//	// Reuse your existing map logic, but force the specific width/height
-//	// Note: You need to refactor ParseMapDescriptionMsg to accept explicit w/h
-//	// or create a ParseRawMapDescription(pr, width, height) helper.
-//
-//	tiles, err := ParseRawMapDescription(pr, clientPos, width, height)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &MapSliceMsg{
-//		Direction: opcode - 0x65, // Hacky way to map 0x65->0, 0x66->1...
-//		Tiles:     tiles,
-//	}, nil
-//}
-//
-//func ParseTile(pr *protocol.PacketReader, groundID uint16, pos types.Position) TileData {
-//	tile := TileData{
-//		Position: pos,
-//		Ground:   groundID,
-//		Items:    []ItemData{},
-//	}
-//
-//	// Loop reading items on the stack
-//	for {
-//		// Peek at the next 2 bytes to check if we are done with this tile.
-//		// We use Peek because if it's a Skip Marker (>= 0xFF00),
-//		// it belongs to the NEXT iteration of the main loop.
-//
-//		nextVal, err := pr.PeekUint16()
-//		if err != nil {
-//			break
-//		} // EOF
-//
-//		// Heuristic: If the next value looks like a Skip Marker (>= 0xFF00),
-//		// we are definitely done with this tile.
-//		if nextVal >= 0xFF00 {
-//			break
-//		}
-//
-//		// DANGER ZONE:
-//		// If 'nextVal' is a regular ID, is it an Item on THIS tile?
-//		// Or the Ground ID of the NEXT tile?
-//		// Without 'items.otb', we cannot know for sure.
-//		//
-//		// Standard Tibia Protocol Logic:
-//		// MapDescription writes: Ground -> Items -> End.
-//		// But it doesn't write an "End" delimiter for the tile specifically.
-//		// It relies on the client knowing that the next ID is a Ground ID (0-4000 range usually?)
-//		// or a Skip Marker.
-//
-//		// FOR A PROXY:
-//		// Usually, we assume we keep reading until we hit a specific condition.
-//		// Since we can't implement full OTB parsing here, we assume standard item structure.
-//
-//		itemID := pr.ReadUint16()
-//		item := ItemData{ID: itemID}
-//
-//		// If you implement OTB checking:
-//		// if ItemIsStackable(itemID) {
-//		//     item.Count = pr.ReadByte()
-//		// }
-//
-//		tile.Items = append(tile.Items, item)
-//
-//		// Safety break to prevent infinite loops in bad parsing
-//		if len(tile.Items) > 10 {
-//			break
-//		}
-//	}
-//
-//	return tile
-//}
+import (
+	"fmt"
+	"goTibia/protocol"
+	"goTibia/types"
+)
+
+const (
+	MapWidth  = 18
+	MapHeight = 14
+
+	TileDataCreatureKnown   = 0x62 // 97
+	TileDataCreatureUnknown = 0x61 // 98
+	TileDataTurnCreature    = 0x63 // 99
+)
+
+type MapDescriptionMsg struct {
+	PlayerPos types.Position
+	Tiles     []Tile
+}
+
+type Tile struct {
+	Position types.Position
+	Ground   *types.Item // Pointer, can be nil
+	Items    []types.Item
+}
+
+func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, error) {
+	msg := &MapDescriptionMsg{
+		Tiles: make([]Tile, 0, MapWidth*MapHeight),
+	}
+
+	msg.PlayerPos = readPosition(pr)
+
+	// 2. Determine Z-Range (Protocol 7.72 Logic)
+	// If on surface (z<=7), draw from 7 down to 0.
+	// If underground (z>7), draw from z-2 to z+2.
+	var startZ, endZ, zStep int
+	if msg.PlayerPos.Z > 7 {
+		startZ = int(msg.PlayerPos.Z) - 2
+		endZ = int(msg.PlayerPos.Z) + 2
+		zStep = 1
+	} else {
+		startZ = 7
+		endZ = 0
+		zStep = -1
+	}
+
+	currentZ := startZ
+	tilesProcessed := 0
+	const tilesPerFloor = MapWidth * MapHeight
+
+	// 3. Loop until all floors are read
+	for {
+		// Calculate perspective offset for this floor
+		// Tibia shifts the view when looking at lower floors
+		offsetZ := int(msg.PlayerPos.Z) - currentZ
+
+		// fmt.Printf("Floor Z=%d, Processed=%d/%d\n", currentZ, tilesProcessed, tilesPerFloor)
+
+		// Peek the Token
+		// >= 0xFF00 means SKIP
+		// <  0xFF00 means TILE (and this is the Ground ID)
+		val, err := pr.PeekUint16()
+		if err != nil {
+			return nil, fmt.Errorf("EOF peeking token at Floor Z=%d, TileIndex=%d", currentZ, tilesProcessed)
+		}
+
+		if val >= 0xFF00 {
+			// --- SKIP (RLE) ---
+			_ = pr.ReadUint16()            // Consume the peeked value
+			skipCount := int(val&0xFF) + 1 // Lower byte is count, skip is 0 based counter
+
+			// fmt.Printf("  [SKIP] Count: %d (Token: %04X) | Total Processed: %d\n", skipCount, val, tilesProcessed)
+
+			tilesProcessed += skipCount
+		} else {
+			// --- REAL TILE ---
+			// 'val' is the Ground ID
+
+			// Calculate actual X,Y based on linear index
+			// Tibia loop order: for(x) { for(y) }
+			nx := tilesProcessed / MapHeight
+			ny := tilesProcessed % MapHeight
+
+			tilePos := types.Position{
+				X: uint16(int(msg.PlayerPos.X) + nx + offsetZ),
+				Y: uint16(int(msg.PlayerPos.Y) + ny + offsetZ),
+				Z: uint8(currentZ),
+			}
+
+			// fmt.Printf("  [TILE] Parsing %v (Ground ID: %d)...\n", tilePos, val)
+
+			// Parse the items on this tile
+			tile := parseTile(pr, tilePos)
+			msg.Tiles = append(msg.Tiles, tile)
+		}
+
+		// Check for Floor End
+		// Use a loop because a massive skip (255) could theoretically
+		// skip the remainder of Floor A, all of Floor B (unlikely 18x14=252), and start of Floor C.
+		for tilesProcessed >= tilesPerFloor {
+
+			// 1. Check if we are done with the entire volume
+			if (zStep > 0 && currentZ == endZ) || (zStep < 0 && currentZ == endZ) {
+				// We finished the last floor.
+				// Any remaining 'skip' count is irrelevant (padding).
+				// fmt.Println("--- END MAP DEBUG (Success) ---")
+
+				return msg, nil
+			}
+
+			// 2. Move to next floor
+			tilesProcessed -= tilesPerFloor
+			currentZ += zStep
+			// fmt.Printf("--- MOVING TO FLOOR Z=%d ---\n", currentZ)
+		}
+	}
+}
+
+func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
+	// 1. Setup the Tile struct
+	t := Tile{
+		Position: pos,
+		Items:    make([]types.Item, 0, 4), // Pre-allocate small cap for performance
+	}
+
+	groundItem := readItem(pr)
+	t.Ground = &groundItem
+
+	// 3. Loop: Read Items on top of the ground
+	// We read until we hit a "Skip" marker (>= 0xFF00) which belongs to the NEXT tile.
+	for {
+		// A. Peek at the next 2 bytes
+		nextVal, err := pr.PeekUint16()
+
+		// B. Stop conditions:
+		// - Error/EOF
+		// - Value is >= 0xFF00 (This is a Skip/RLE marker for the map loop)
+		if err != nil || nextVal >= 0xFF00 {
+			// fmt.Println("End of Tile")
+			break
+		}
+
+		if nextVal == TileDataCreatureKnown || nextVal == TileDataCreatureUnknown {
+			// It is a CREATURE, not an ITEM.
+			// We must consume the bytes to keep the stream aligned.
+
+			// Note: For a pure MapDescription parser, we often discard creature data
+			// because creatures are usually tracked via 0x6A/0x6B packets.
+			// However, we MUST read it to advance the cursor.
+
+			err := readCreatureInMap(pr)
+			if err != nil {
+				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
+				return Tile{}
+			}
+			continue
+		}
+
+		item := readItem(pr)
+		t.Items = append(t.Items, item)
+	}
+
+	return t
+}
+
+func readCreatureInMap(pr *protocol.PacketReader) error {
+	// 1. Read Marker (We already peeked it, but we must consume it)
+	marker := pr.ReadUint16()
+
+	// 2. Handle ID / Name logic
+	if marker == TileDataCreatureKnown { // 0x62
+		// C++: if (known) msg.add<uint32_t>(creature->getID());
+		_ = pr.ReadUint32() // ID
+
+	} else if marker == TileDataCreatureUnknown { // 0x61
+		_ = pr.ReadUint32() // The id to remove from knowns, it is there to free some slot from known creatures list.
+		_ = pr.ReadUint32() // ID
+		_ = pr.ReadString() // Name
+	} else {
+		return fmt.Errorf("unknown creature marker: 0x%X", marker)
+	}
+
+	// 3. Shared Data (Sent for BOTH Known and Unknown in your server!)
+	// C++: Logic follows the if/else block immediately.
+
+	// Health
+	_ = pr.ReadByte()
+
+	// Direction
+	_ = pr.ReadByte()
+
+	// Outfit
+	// C++: AddOutfit(msg, ...)
+	if err := readOutfit(pr); err != nil {
+		return err
+	}
+
+	// Light
+	// C++: msg.addByte(level); msg.addByte(color);
+	_ = pr.ReadByte() // Light Level
+	_ = pr.ReadByte() // Light Color
+
+	// Speed
+	// C++: msg.add<uint16_t>(stepSpeed)
+	_ = pr.ReadUint16()
+
+	// Skull & Party
+	_ = pr.ReadByte() // Skull
+	_ = pr.ReadByte() // Party Shield
+
+	return nil
+}
+
+// Helper to read Outfit (Standard 7.72 structure)
+func readOutfit(pr *protocol.PacketReader) error {
+	lookType := pr.ReadUint16()
+
+	if lookType != 0 {
+		// Standard Outfit (Hero, Demon, etc.)
+		_ = pr.ReadByte() // Head
+		_ = pr.ReadByte() // Body
+		_ = pr.ReadByte() // Legs
+		_ = pr.ReadByte() // Feet
+	} else {
+		// Item Outfit (Chameleon Rune, etc.)
+		_ = pr.ReadUint16() // Look Item ID
+	}
+	return nil
+}

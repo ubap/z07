@@ -3,7 +3,6 @@ package game
 import (
 	"errors"
 	"goTibia/protocol"
-	"log"
 )
 
 // ErrUnknownOpcode is returned when we don't have a parser for this ID.
@@ -14,6 +13,8 @@ var ErrNotFullyImplemented = errors.New("not fully implemented")
 // S2CPacket is a marker interface for any packet received from Server.
 type S2CPacket interface {
 	// We can add methods here later, e.g., Name() string
+	// TODO consider adding Opcode() uint8 to identify the packet type
+	// Opcode() uint8
 }
 
 func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) {
@@ -21,20 +22,21 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
 	case S2CMapDescription:
-		//return ParseMapDescription(pr)
-		log.Println("parse map description - not implemented")
-		return nil, ErrUnknownOpcode
+		return ParseMapDescriptionMsg(pr)
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
 	case S2CPing:
-		return PingMsg{}, nil
-	case S2CPlayerStats:
-		log.Println("player stats")
-		return nil, ErrUnknownOpcode
+		return &PingMsg{}, nil
 	case S2CMagicEffect:
 		return ParseMagicEffect(pr)
+	case S2CAddTileThing:
+		return ParseAddTileThingMsg(pr)
 	case S2CRemoveTileThing:
 		return ParseRemoveTileThing(pr)
+	case S2CAddInventoryItem:
+		return ParseAddInventoryItemMsg(pr)
+	case S2CRemoveInventoryItem:
+		return ParseRemoveInventoryItemMsg(pr)
 	case S2CWorldLight:
 		return ParseWorldLight(pr)
 	case S2CCreatureLight:

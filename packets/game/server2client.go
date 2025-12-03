@@ -48,6 +48,11 @@ type RemoveTileThingMsg struct {
 	StackPos uint8
 }
 
+type AddTileThingMsg struct {
+	Pos  types.Position
+	Item types.Item
+}
+
 type CreatureLightMsg struct {
 	CreatureID uint32
 	LightLevel uint8
@@ -70,6 +75,19 @@ type PlayerIconsMsg struct {
 
 type ContainerMsg struct {
 	ContainerID uint8
+}
+
+type AddInventoryItemMsg struct {
+	Slot uint8
+	Item types.Item
+}
+
+type RemoveInventoryItemMsg struct {
+	Slot uint8
+}
+
+type SayMsg struct {
+	Slot uint8
 }
 
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
@@ -216,4 +234,33 @@ func ParseServerClosedMsg(pr *protocol.PacketReader) (*ServerClosedMsg, error) {
 	scm := &ServerClosedMsg{}
 	scm.Reason = pr.ReadString()
 	return scm, nil
+}
+
+func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
+	ati := &AddTileThingMsg{}
+	ati.Pos.X = pr.ReadUint16()
+	ati.Pos.Y = pr.ReadUint16()
+	ati.Pos.Z = pr.ReadByte()
+
+	itemId, _ := pr.PeekUint16()
+	if itemId == 97 || itemId == 98 {
+		// TODO do something with it
+		readCreatureInMap(pr)
+	} else {
+		ati.Item = readItem(pr)
+	}
+	return ati, nil
+}
+
+func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, error) {
+	aii := &AddInventoryItemMsg{}
+	aii.Slot = pr.ReadByte()
+	aii.Item = readItem(pr)
+	return aii, nil
+}
+
+func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryItemMsg, error) {
+	rii := &RemoveInventoryItemMsg{}
+	rii.Slot = pr.ReadByte()
+	return rii, nil
 }
