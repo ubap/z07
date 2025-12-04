@@ -20,15 +20,9 @@ func readPosition(pr *protocol.PacketReader) types.Position {
 	}
 }
 
-// readItem reads a full Item (ID + Optional Count/Subtype) from the stream.
-// This is used for Inventory, Containers, and Tile Stacks.
 func readItem(pr *protocol.PacketReader) types.Item {
-	// 1. Read ID
 	id := pr.ReadUint16()
-
-	// 2. Setup Struct
 	item := types.Item{ID: id}
-
 	thing := dat.Get(id)
 
 	if thing.IsStackable || thing.IsFluid {
