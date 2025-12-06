@@ -91,8 +91,15 @@ func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan ch
 
 func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
 	for packetReader.Remaining() > 0 {
+
+		h.State.RLock()
+		ctx := packets.ParsingContext{
+			PlayerPosition: h.State.Player.Pos,
+		}
+		h.State.RUnlock()
+
 		opcode := packetReader.ReadByte()
-		packet, err := packets.ParseS2CPacket(opcode, packetReader)
+		packet, err := packets.ParseS2CPacket(opcode, packetReader, ctx)
 		if err != nil {
 			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
@@ -111,8 +118,9 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
 		h.State.Player.ID = p.PlayerId
-	case *packets.MapDescription:
-		h.State.Player.Pos = p.Pos
+	case *packets.MapDescriptionMsg:
+		h.State.Player.Pos = p.PlayerPos
+		log.Printf("[Game] Pos %v", p.PlayerPos)
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:

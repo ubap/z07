@@ -17,12 +17,20 @@ type S2CPacket interface {
 	// Opcode() uint8
 }
 
-func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) {
+func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext) (S2CPacket, error) {
 	switch opcode {
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
 	case S2CMapDescription:
 		return ParseMapDescriptionMsg(pr)
+	case S2CMapSliceNorth:
+		return ParseMove(pr, ctx, NORTH)
+	case S2CMapSliceSouth:
+		return ParseMove(pr, ctx, SOUTH)
+	case S2CMapSliceEast:
+		return ParseMove(pr, ctx, EAST)
+	case S2CMapSliceWest:
+		return ParseMove(pr, ctx, WEST)
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
 	case S2CPing:

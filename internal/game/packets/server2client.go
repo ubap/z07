@@ -12,10 +12,6 @@ type LoginResponse struct {
 	CanReportBugs      bool
 }
 
-type MapDescription struct {
-	Pos domain.Position
-}
-
 type MoveCreatureMsg struct {
 	// The destination is always present
 	ToPos domain.Position
