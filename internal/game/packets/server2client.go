@@ -100,10 +100,6 @@ func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) 
 	return lr, pr.Err()
 }
 
-func ParsePlayerStats(pr *protocol.PacketReader) (*MapDescription, error) {
-	return nil, ErrUnknownOpcode
-}
-
 func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 	msg := &MoveCreatureMsg{
 		FromStackPos: -1,

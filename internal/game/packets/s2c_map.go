@@ -177,9 +177,6 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 		return fmt.Errorf("unknown creature marker: 0x%X", marker)
 	}
 
-	// 3. Shared Data (Sent for BOTH Known and Unknown in your server!)
-	// C++: Logic follows the if/else block immediately.
-
 	// Health
 	_ = pr.ReadByte()
 
@@ -187,18 +184,15 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 	_ = pr.ReadByte()
 
 	// Outfit
-	// C++: AddOutfit(msg, ...)
 	if err := readOutfit(pr); err != nil {
 		return err
 	}
 
 	// Light
-	// C++: msg.addByte(level); msg.addByte(color);
 	_ = pr.ReadByte() // Light Level
 	_ = pr.ReadByte() // Light Color
 
 	// Speed
-	// C++: msg.add<uint16_t>(stepSpeed)
 	_ = pr.ReadUint16()
 
 	// Skull & Party
@@ -208,12 +202,10 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 	return nil
 }
 
-// Helper to read Outfit (Standard 7.72 structure)
 func readOutfit(pr *protocol.PacketReader) error {
 	lookType := pr.ReadUint16()
 
 	if lookType != 0 {
-		// Standard Outfit (Hero, Demon, etc.)
 		_ = pr.ReadByte() // Head
 		_ = pr.ReadByte() // Body
 		_ = pr.ReadByte() // Legs
