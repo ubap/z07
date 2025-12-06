@@ -1,7 +1,7 @@
 package packets
 
 import (
-	"goTibia/internal/game/types"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
 )
 
@@ -13,16 +13,16 @@ type LoginResponse struct {
 }
 
 type MapDescription struct {
-	Pos types.Position
+	Pos domain.Position
 }
 
 type MoveCreatureMsg struct {
 	// The destination is always present
-	ToPos types.Position
+	ToPos domain.Position
 
 	// --- CONDITIONAL FIELDS ---
 	// Branch A: We know the exact tile and stack position (OldPos < 10)
-	FromPos      types.Position
+	FromPos      domain.Position
 	FromStackPos int8 // -1 if not set
 
 	// Branch B: We only know the Creature ID (OldPos >= 10 or off-screen)
@@ -35,7 +35,7 @@ type MoveCreatureMsg struct {
 type PingMsg struct{}
 
 type MagicEffect struct {
-	Pos  types.Position
+	Pos  domain.Position
 	Type uint8
 }
 
@@ -44,13 +44,13 @@ type RemoveTileCreatureMsg struct {
 }
 
 type RemoveTileThingMsg struct {
-	Pos      types.Position
+	Pos      domain.Position
 	StackPos uint8
 }
 
 type AddTileThingMsg struct {
-	Pos  types.Position
-	Item types.Item
+	Pos  domain.Position
+	Item domain.Item
 }
 
 type CreatureLightMsg struct {
@@ -78,8 +78,8 @@ type ContainerMsg struct {
 }
 
 type AddInventoryItemMsg struct {
-	Slot uint8
-	Item types.Item
+	Slot domain.InventorySlot
+	Item domain.Item
 }
 
 type RemoveInventoryItemMsg struct {
@@ -254,7 +254,7 @@ func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
 
 func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, error) {
 	aii := &AddInventoryItemMsg{}
-	aii.Slot = pr.ReadByte()
+	aii.Slot = domain.InventorySlot(pr.ReadByte())
 	aii.Item = readItem(pr)
 	return aii, nil
 }

@@ -2,7 +2,7 @@ package packets
 
 import (
 	"fmt"
-	"goTibia/internal/game/types"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
 )
 
@@ -16,13 +16,13 @@ const (
 )
 
 type MapDescriptionMsg struct {
-	PlayerPos types.Position
-	Tiles     []types.Tile
+	PlayerPos domain.Position
+	Tiles     []domain.Tile
 }
 
 func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, error) {
 	msg := &MapDescriptionMsg{
-		Tiles: make([]types.Tile, 0, MapWidth*MapHeight),
+		Tiles: make([]domain.Tile, 0, MapWidth*MapHeight),
 	}
 
 	msg.PlayerPos = readPosition(pr)
@@ -78,7 +78,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 			nx := tilesProcessed / MapHeight
 			ny := tilesProcessed % MapHeight
 
-			tilePos := types.Position{
+			tilePos := domain.Position{
 				X: uint16(int(msg.PlayerPos.X) + nx + offsetZ),
 				Y: uint16(int(msg.PlayerPos.Y) + ny + offsetZ),
 				Z: uint8(currentZ),
@@ -113,11 +113,11 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	}
 }
 
-func parseTile(pr *protocol.PacketReader, pos types.Position) types.Tile {
+func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
 	// 1. Setup the Tile struct
-	t := types.Tile{
+	t := domain.Tile{
 		Position: pos,
-		Items:    make([]types.Item, 0, 4), // Pre-allocate small cap for performance
+		Items:    make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
 	}
 
 	groundItem := readItem(pr)
@@ -148,7 +148,7 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) types.Tile {
 			err := readCreatureInMap(pr)
 			if err != nil {
 				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
-				return types.Tile{}
+				return domain.Tile{}
 			}
 			continue
 		}

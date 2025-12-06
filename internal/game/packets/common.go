@@ -2,27 +2,27 @@ package packets
 
 import (
 	"goTibia/internal/assets"
-	"goTibia/internal/game/types"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
 )
 
-func writePosition(pw *protocol.PacketWriter, position types.Position) {
+func writePosition(pw *protocol.PacketWriter, position domain.Position) {
 	pw.WriteUint16(position.X)
 	pw.WriteUint16(position.Y)
 	pw.WriteByte(position.Z)
 }
 
-func readPosition(pr *protocol.PacketReader) types.Position {
-	return types.Position{
+func readPosition(pr *protocol.PacketReader) domain.Position {
+	return domain.Position{
 		X: pr.ReadUint16(),
 		Y: pr.ReadUint16(),
 		Z: pr.ReadByte(),
 	}
 }
 
-func readItem(pr *protocol.PacketReader) types.Item {
+func readItem(pr *protocol.PacketReader) domain.Item {
 	id := pr.ReadUint16()
-	item := types.Item{ID: id}
+	item := domain.Item{ID: id}
 	thing := assets.Get(id)
 
 	if thing.IsStackable || thing.IsFluid {
