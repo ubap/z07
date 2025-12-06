@@ -48,7 +48,6 @@ func (s *Server) Start() error {
 		// Hand off to the specific logic in a goroutine
 		go func() {
 			defer protoConn.Close()
-			// We pass the RealServerAddr so the handler knows where to dial
 			s.Handler.Handle(protoConn)
 		}()
 	}
