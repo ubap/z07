@@ -1,7 +1,6 @@
 package game
 
 import (
-	"errors"
 	"fmt"
 	"goTibia/bot"
 	"goTibia/game/state"
@@ -80,9 +79,6 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 	for packetReader.Remaining() > 0 {
 		opcode := packetReader.ReadByte()
 		packet, err := game.ParseS2CPacket(opcode, packetReader)
-		if errors.Is(err, game.ErrNotFullyImplemented) {
-			h.processPacketFromServer(packet)
-		}
 		if err != nil {
 			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
