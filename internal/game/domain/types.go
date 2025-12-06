@@ -2,10 +2,9 @@ package domain
 
 import "fmt"
 
-type Position struct {
-	X uint16
-	Y uint16
-	Z uint8
+type Coordinate struct {
+	X, Y uint16
+	Z    uint8
 }
 
 type Item struct {
@@ -24,7 +23,7 @@ func (i Item) String() string {
 }
 
 type Tile struct {
-	Position Position
+	Position Coordinate
 	Ground   *Item
 	Items    []Item
 }

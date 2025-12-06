@@ -23,7 +23,7 @@ func New() *GameState {
 type PlayerModel struct {
 	ID   uint32
 	Name string
-	Pos  domain.Position
+	Pos  domain.Coordinate
 }
 
 // Lock

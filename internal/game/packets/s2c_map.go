@@ -16,7 +16,7 @@ const (
 )
 
 type MapDescriptionMsg struct {
-	PlayerPos domain.Position
+	PlayerPos domain.Coordinate
 	Tiles     []domain.Tile
 }
 
@@ -64,7 +64,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	return msg, err
 }
 
-func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width int, height int) (*[]domain.Tile, error) {
+func parseMapDescription(pr *protocol.PacketReader, pos domain.Coordinate, width int, height int) (*[]domain.Tile, error) {
 	tiles := make([]domain.Tile, 0, width*height)
 
 	// 2. Determine Z-Range (Protocol 7.72 Logic)
@@ -118,7 +118,7 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 			nx := tilesProcessed / height
 			ny := tilesProcessed % height
 
-			tilePos := domain.Position{
+			tilePos := domain.Coordinate{
 				X: uint16(int(pos.X) + nx + offsetZ),
 				Y: uint16(int(pos.Y) + ny + offsetZ),
 				Z: uint8(currentZ),
@@ -154,7 +154,7 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 
 }
 
-func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
+func parseTile(pr *protocol.PacketReader, pos domain.Coordinate) domain.Tile {
 	// 1. Setup the Tile struct
 	t := domain.Tile{
 		Position: pos,

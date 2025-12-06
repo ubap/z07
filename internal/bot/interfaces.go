@@ -3,7 +3,7 @@ package bot
 import "goTibia/internal/game/domain"
 
 type WorldStateReader interface {
-	GetPlayerPosition() domain.Position
+	GetPlayerPosition() domain.Coordinate
 	GetInventoryItem(slot domain.InventorySlot) domain.Item
 	GetPlayerID() uint32
 }

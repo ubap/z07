@@ -16,7 +16,7 @@ type BotAdapter struct {
 
 // region Implementing WorldStateReader
 
-func (ba *BotAdapter) GetPlayerPosition() domain.Position {
+func (ba *BotAdapter) GetPlayerPosition() domain.Coordinate {
 	// Thread-safe access to state
 	ba.State.Lock()
 	defer ba.State.Unlock()

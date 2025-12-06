@@ -6,14 +6,14 @@ import (
 	"goTibia/internal/protocol"
 )
 
-func writePosition(pw *protocol.PacketWriter, position domain.Position) {
+func writePosition(pw *protocol.PacketWriter, position domain.Coordinate) {
 	pw.WriteUint16(position.X)
 	pw.WriteUint16(position.Y)
 	pw.WriteByte(position.Z)
 }
 
-func readPosition(pr *protocol.PacketReader) domain.Position {
-	return domain.Position{
+func readPosition(pr *protocol.PacketReader) domain.Coordinate {
+	return domain.Coordinate{
 		X: pr.ReadUint16(),
 		Y: pr.ReadUint16(),
 		Z: pr.ReadByte(),

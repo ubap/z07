@@ -14,11 +14,11 @@ type LoginResponse struct {
 
 type MoveCreatureMsg struct {
 	// The destination is always present
-	ToPos domain.Position
+	ToPos domain.Coordinate
 
 	// --- CONDITIONAL FIELDS ---
 	// Branch A: We know the exact tile and stack position (OldPos < 10)
-	FromPos      domain.Position
+	FromPos      domain.Coordinate
 	FromStackPos int8 // -1 if not set
 
 	// Branch B: We only know the Creature ID (OldPos >= 10 or off-screen)
@@ -31,7 +31,7 @@ type MoveCreatureMsg struct {
 type PingMsg struct{}
 
 type MagicEffect struct {
-	Pos  domain.Position
+	Pos  domain.Coordinate
 	Type uint8
 }
 
@@ -40,12 +40,12 @@ type RemoveTileCreatureMsg struct {
 }
 
 type RemoveTileThingMsg struct {
-	Pos      domain.Position
+	Pos      domain.Coordinate
 	StackPos uint8
 }
 
 type AddTileThingMsg struct {
-	Pos  domain.Position
+	Pos  domain.Coordinate
 	Item domain.Item
 }
 
@@ -110,7 +110,7 @@ func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 
 	// 2. Decide which branch to parse
 	if peekVal == 0xFFFF {
-		// --- BRANCH B: Unknown Position (CreatureID) ---
+		// --- BRANCH B: Unknown Coordinate (CreatureID) ---
 		_ = pr.ReadUint16() // Consume the 0xFFFF marker
 
 		msg.CreatureID = pr.ReadUint32()
