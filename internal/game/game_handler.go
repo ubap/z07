@@ -126,13 +126,13 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.MagicEffect:
 		log.Printf("[Game] MagicEffect %v", p)
 	case *packets.RemoveTileThingMsg:
-		log.Printf("[Game] RemoveTileThingMsg %v", p)
+		// log.Printf("[Game] RemoveTileThingMsg %v", p)
 	case *packets.RemoveTileCreatureMsg:
-		log.Printf("[Game] RemoveTileCreatureMsg %v", p)
+		// log.Printf("[Game] RemoveTileCreatureMsg %v", p)
 	case *packets.CreatureLightMsg:
-		log.Printf("[Game] CreatureLightMsg %v", p)
+		// log.Printf("[Game] CreatureLightMsg %v", p)
 	case *packets.CreatureHealthMsg:
-		log.Printf("[Game] CreatureHealthMsg %v", p)
+		// log.Printf("[Game] CreatureHealthMsg %v", p)
 	case *packets.PlayerIconsMsg:
 		log.Printf("[Game] PlayerIconsMsg %v", p)
 	case *packets.ServerClosedMsg:
