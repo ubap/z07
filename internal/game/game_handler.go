@@ -88,7 +88,6 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
-		log.Printf("[Game] Received game message: %d", p.PlayerId)
 		h.State.SetPlayerId(p.PlayerId)
 	case *packets.MapDescription:
 		h.State.SetPosition(p.Pos)
