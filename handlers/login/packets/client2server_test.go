@@ -1,7 +1,7 @@
-package login_test
+package packets_test
 
 import (
-	"goTibia/packets/login"
+	"goTibia/handlers/login/packets"
 	"goTibia/protocol"
 	"goTibia/protocol/crypto"
 	"testing"
@@ -15,7 +15,7 @@ func Test_Encode_Parse(t *testing.T) {
 	defer func() { crypto.RSA.GameServerPublicKey = originalKey }()
 	crypto.RSA.GameServerPublicKey = &crypto.RSA.ClientPrivateKey.PublicKey
 
-	packet := login.ClientCredentialPacket{
+	packet := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      65535,
 		ClientVersion: 1234,
@@ -33,7 +33,7 @@ func Test_Encode_Parse(t *testing.T) {
 	require.NoError(t, err, "Getting bytes from packet writer should not fail")
 
 	reader := protocol.NewPacketReader(bytes)
-	loginPacket, err := login.ParseCredentialsPacket(reader)
+	loginPacket, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
@@ -57,10 +57,10 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 	}
 
 	reader := protocol.NewPacketReader(capturedPacket)
-	packet, err := login.ParseCredentialsPacket(reader)
+	packet, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
-	expected := login.ClientCredentialPacket{
+	expected := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      2,
 		ClientVersion: 772,
@@ -79,7 +79,7 @@ func TestParseCredentials_WrongRSAKey(t *testing.T) {
 	// Client key does not match GameServer key, so decryption should fail.
 
 	// Encode a valid packet
-	packet := login.ClientCredentialPacket{
+	packet := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      65535,
 		ClientVersion: 1234,
@@ -96,7 +96,7 @@ func TestParseCredentials_WrongRSAKey(t *testing.T) {
 
 	// Attempt to parse
 	reader := protocol.NewPacketReader(validBytes)
-	_, err := login.ParseCredentialsPacket(reader)
+	_, err := packets.ParseCredentialsPacket(reader)
 
 	// Assert failure
 	require.Error(t, err, "Should fail when RSA keys do not match")
@@ -105,7 +105,7 @@ func TestParseCredentials_WrongRSAKey(t *testing.T) {
 
 func TestParseCredentials_TruncatedPacket(t *testing.T) {
 	// Generate a valid packet
-	packet := login.ClientCredentialPacket{
+	packet := packets.ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      65535,
 		ClientVersion: 1234,
@@ -125,7 +125,7 @@ func TestParseCredentials_TruncatedPacket(t *testing.T) {
 
 	// Attempt parse
 	reader := protocol.NewPacketReader(truncatedBytes)
-	result, err := login.ParseCredentialsPacket(reader)
+	result, err := packets.ParseCredentialsPacket(reader)
 
 	// Assert
 	require.Error(t, err)

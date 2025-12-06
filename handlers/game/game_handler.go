@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"goTibia/bot"
 	"goTibia/game/state"
-	"goTibia/packets/game"
+	"goTibia/handlers/game/packets"
 	"goTibia/protocol"
 	"goTibia/proxy"
 	"log"
@@ -25,7 +25,7 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 		"Game",
 		client,
 		h.TargetAddr,
-		game.ParseLoginRequest,
+		packets.ParseLoginRequest,
 	)
 	if err != nil {
 		log.Printf("Game: Failed to initialize session for %s: %v", client.RemoteAddr(), err)
@@ -78,7 +78,7 @@ func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan ch
 func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
 	for packetReader.Remaining() > 0 {
 		opcode := packetReader.ReadByte()
-		packet, err := game.ParseS2CPacket(opcode, packetReader)
+		packet, err := packets.ParseS2CPacket(opcode, packetReader)
 		if err != nil {
 			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
@@ -87,36 +87,36 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 	}
 }
 
-func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
+func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	switch p := packet.(type) {
-	case *game.LoginResponse:
+	case *packets.LoginResponse:
 		log.Printf("[Game] Received game message: %d", p.PlayerId)
 		h.State.SetPlayerId(p.PlayerId)
-	case *game.MapDescription:
+	case *packets.MapDescription:
 		h.State.SetPosition(p.Pos)
-	case *game.MoveCreatureMsg:
+	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
-	case *game.MagicEffect:
+	case *packets.MagicEffect:
 		log.Printf("[Game] MagicEffect %v", p)
-	case *game.RemoveTileThingMsg:
+	case *packets.RemoveTileThingMsg:
 		log.Printf("[Game] RemoveTileThingMsg %v", p)
-	case *game.RemoveTileCreatureMsg:
+	case *packets.RemoveTileCreatureMsg:
 		log.Printf("[Game] RemoveTileCreatureMsg %v", p)
-	case *game.CreatureLightMsg:
+	case *packets.CreatureLightMsg:
 		log.Printf("[Game] CreatureLightMsg %v", p)
-	case *game.CreatureHealthMsg:
+	case *packets.CreatureHealthMsg:
 		log.Printf("[Game] CreatureHealthMsg %v", p)
-	case *game.PlayerIconsMsg:
+	case *packets.PlayerIconsMsg:
 		log.Printf("[Game] PlayerIconsMsg %v", p)
-	case *game.ServerClosedMsg:
+	case *packets.ServerClosedMsg:
 		log.Printf("[Game] ServerClosedMsg %v", p)
-	case *game.AddTileThingMsg:
+	case *packets.AddTileThingMsg:
 		log.Printf("[Game] AddTileThingMsg %v", p)
-	case *game.AddInventoryItemMsg:
+	case *packets.AddInventoryItemMsg:
 		log.Printf("[Game] AddInventoryItemMsg %v", p)
-	case *game.RemoveInventoryItemMsg:
+	case *packets.RemoveInventoryItemMsg:
 		log.Printf("[Game] RemoveInventoryItemMsg %v", p)
-	case *game.PingMsg:
+	case *packets.PingMsg:
 		// Ignore
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)

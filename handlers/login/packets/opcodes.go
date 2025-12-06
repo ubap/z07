@@ -1,4 +1,4 @@
-package login
+package packets
 
 const (
 	S2COpcodeMOTD             uint8 = 0x14

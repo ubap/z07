@@ -1,7 +1,7 @@
 package login
 
 import (
-	loginpkt "goTibia/packets/login"
+	"goTibia/handlers/login/packets"
 	"goTibia/protocol"
 	"goTibia/proxy"
 	"log"
@@ -21,7 +21,7 @@ func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
 		"Login",
 		protoClientConn,
 		h.TargetAddr,
-		loginpkt.ParseCredentialsPacket,
+		packets.ParseCredentialsPacket,
 	)
 	defer protoServerConn.Close()
 
@@ -31,7 +31,7 @@ func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
 		return
 	}
 
-	loginResultMessage, err := loginpkt.ParseLoginResultMessage(packetReader)
+	loginResultMessage, err := packets.ParseLoginResultMessage(packetReader)
 	if err != nil {
 		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
@@ -49,14 +49,14 @@ func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
-func injectMotd(message *loginpkt.LoginResultMessage, motd string) {
-	message.Motd = &loginpkt.Motd{
+func injectMotd(message *packets.LoginResultMessage, motd string) {
+	message.Motd = &packets.Motd{
 		MotdId:  strconv.Itoa(int(time.Now().Unix())),
 		Message: motd,
 	}
 }
 
-func injectProxyGameworldIP(message *loginpkt.LoginResultMessage) {
+func injectProxyGameworldIP(message *packets.LoginResultMessage) {
 	for _, c := range message.CharacterList.Characters {
 
 		// TODO: Extract configuration - do not hardcode

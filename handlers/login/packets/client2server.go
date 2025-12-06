@@ -1,4 +1,4 @@
-package login
+package packets
 
 import (
 	"errors"

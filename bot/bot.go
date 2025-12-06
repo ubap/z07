@@ -2,7 +2,7 @@ package bot
 
 import (
 	"goTibia/game/state"
-	"goTibia/packets/game"
+	"goTibia/handlers/game/packets"
 	"goTibia/protocol"
 	"log"
 	"sync"
@@ -75,7 +75,7 @@ func (b *Bot) loopLightHack() {
 			if b.State.Player.ID == 0 {
 				continue // Player not logged in yet
 			}
-			pkt := &game.CreatureLightMsg{
+			pkt := &packets.CreatureLightMsg{
 				CreatureID: b.State.Player.ID,
 				LightLevel: 0xFF,
 				Color:      215,
