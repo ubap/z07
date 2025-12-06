@@ -1,8 +1,8 @@
 package packets
 
 import (
-	"goTibia/protocol"
-	"goTibia/types"
+	"goTibia/internal/game/types"
+	protocol2 "goTibia/internal/protocol"
 )
 
 type LoginResponse struct {
@@ -90,7 +90,7 @@ type SayMsg struct {
 	Slot uint8
 }
 
-func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
+func ParseLoginResultMessage(pr *protocol2.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
 	lr.PlayerId = pr.ReadUint32()
@@ -100,11 +100,11 @@ func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) 
 	return lr, pr.Err()
 }
 
-func ParsePlayerStats(pr *protocol.PacketReader) (*MapDescription, error) {
+func ParsePlayerStats(pr *protocol2.PacketReader) (*MapDescription, error) {
 	return nil, ErrUnknownOpcode
 }
 
-func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
+func ParseMoveCreature(pr *protocol2.PacketReader) (*MoveCreatureMsg, error) {
 	msg := &MoveCreatureMsg{
 		FromStackPos: -1,
 	}
@@ -147,14 +147,14 @@ func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 	return msg, nil
 }
 
-func ParseMagicEffect(pr *protocol.PacketReader) (*MagicEffect, error) {
+func ParseMagicEffect(pr *protocol2.PacketReader) (*MagicEffect, error) {
 	me := &MagicEffect{}
 	me.Pos = readPosition(pr)
 	me.Type = pr.ReadByte()
 	return me, nil
 }
 
-func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
+func ParseRemoveTileThing(pr *protocol2.PacketReader) (S2CPacket, error) {
 	// 1. Peek
 	peekVal, err := pr.PeekUint16()
 	if err != nil {
@@ -181,7 +181,7 @@ func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
 	return msg, nil
 }
 
-func ParseCreatureLight(pr *protocol.PacketReader) (*CreatureLightMsg, error) {
+func ParseCreatureLight(pr *protocol2.PacketReader) (*CreatureLightMsg, error) {
 	cl := &CreatureLightMsg{}
 	cl.CreatureID = pr.ReadUint32()
 	cl.LightLevel = pr.ReadByte()
@@ -190,7 +190,7 @@ func ParseCreatureLight(pr *protocol.PacketReader) (*CreatureLightMsg, error) {
 	return cl, nil
 }
 
-func ParseWorldLight(pr *protocol.PacketReader) (*WorldLightMsg, error) {
+func ParseWorldLight(pr *protocol2.PacketReader) (*WorldLightMsg, error) {
 	cl := &WorldLightMsg{}
 	cl.LightLevel = pr.ReadByte()
 	cl.Color = pr.ReadByte()
@@ -198,7 +198,7 @@ func ParseWorldLight(pr *protocol.PacketReader) (*WorldLightMsg, error) {
 	return cl, nil
 }
 
-func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) {
+func ParseCreatureHealth(pr *protocol2.PacketReader) (*CreatureHealthMsg, error) {
 	cl := &CreatureHealthMsg{}
 	cl.CreatureID = pr.ReadUint32()
 	cl.Hppc = pr.ReadByte()
@@ -206,20 +206,20 @@ func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) 
 	return cl, nil
 }
 
-func (lr *WorldLightMsg) Encode(pw *protocol.PacketWriter) {
+func (lr *WorldLightMsg) Encode(pw *protocol2.PacketWriter) {
 	pw.WriteByte(S2CWorldLight)
 	pw.WriteByte(lr.LightLevel)
 	pw.WriteByte(lr.Color)
 }
 
-func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
+func (cr *CreatureLightMsg) Encode(pw *protocol2.PacketWriter) {
 	pw.WriteByte(S2CCreatureLight)
 	pw.WriteUint32(cr.CreatureID)
 	pw.WriteByte(cr.LightLevel)
 	pw.WriteByte(cr.Color)
 }
 
-func ParsePlayerIcons(pr *protocol.PacketReader) (*PlayerIconsMsg, error) {
+func ParsePlayerIcons(pr *protocol2.PacketReader) (*PlayerIconsMsg, error) {
 	pi := &PlayerIconsMsg{}
 	pi.Icons = pr.ReadByte()
 
@@ -230,13 +230,13 @@ type ServerClosedMsg struct {
 	Reason string
 }
 
-func ParseServerClosedMsg(pr *protocol.PacketReader) (*ServerClosedMsg, error) {
+func ParseServerClosedMsg(pr *protocol2.PacketReader) (*ServerClosedMsg, error) {
 	scm := &ServerClosedMsg{}
 	scm.Reason = pr.ReadString()
 	return scm, nil
 }
 
-func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
+func ParseAddTileThingMsg(pr *protocol2.PacketReader) (*AddTileThingMsg, error) {
 	ati := &AddTileThingMsg{}
 	ati.Pos.X = pr.ReadUint16()
 	ati.Pos.Y = pr.ReadUint16()
@@ -252,14 +252,14 @@ func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
 	return ati, nil
 }
 
-func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, error) {
+func ParseAddInventoryItemMsg(pr *protocol2.PacketReader) (*AddInventoryItemMsg, error) {
 	aii := &AddInventoryItemMsg{}
 	aii.Slot = pr.ReadByte()
 	aii.Item = readItem(pr)
 	return aii, nil
 }
 
-func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryItemMsg, error) {
+func ParseRemoveInventoryItemMsg(pr *protocol2.PacketReader) (*RemoveInventoryItemMsg, error) {
 	rii := &RemoveInventoryItemMsg{}
 	rii.Slot = pr.ReadByte()
 	return rii, nil

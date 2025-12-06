@@ -2,8 +2,8 @@ package packets
 
 import (
 	"fmt"
-	"goTibia/protocol"
-	"goTibia/types"
+	"goTibia/internal/game/types"
+	"goTibia/internal/protocol"
 )
 
 const (

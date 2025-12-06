@@ -1,7 +1,7 @@
-package state
+package game
 
 import (
-	"goTibia/types"
+	"goTibia/internal/game/types"
 	"log"
 	"sync"
 )

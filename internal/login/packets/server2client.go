@@ -3,7 +3,7 @@ package packets
 import (
 	"errors"
 	"fmt"
-	"goTibia/protocol"
+	protocol2 "goTibia/internal/protocol"
 	"log"
 	"strings"
 )
@@ -17,7 +17,7 @@ type LoginResultMessage struct {
 	CharacterList            *CharacterList
 }
 
-func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
+func (lp *LoginResultMessage) Encode(pw *protocol2.PacketWriter) {
 	if lp.ClientDisconnected {
 		pw.WriteByte(S2COpcodeDisconnectClient)
 		pw.WriteString(lp.ClientDisconnectedReason)
@@ -35,7 +35,7 @@ func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 	}
 }
 
-func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResultMessage, error) {
+func ParseLoginResultMessage(pr *protocol2.PacketReader) (*LoginResultMessage, error) {
 	message := LoginResultMessage{}
 	for pr.Remaining() > 0 {
 		opcode := pr.ReadByte()
@@ -93,7 +93,7 @@ type CharacterEntry struct {
 	WorldPort uint16
 }
 
-func parseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
+func parseCharacterList(packetReader *protocol2.PacketReader) (*CharacterList, error) {
 	entryCount := packetReader.ReadByte()
 
 	characterEntries := make([]*CharacterEntry, entryCount)
@@ -116,14 +116,14 @@ func parseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, er
 	return &CharacterList{Characters: characterEntries, PremiumDays: premiumDays}, packetReader.Err()
 }
 
-func writeCharacterEntry(pw *protocol.PacketWriter, entry *CharacterEntry) {
+func writeCharacterEntry(pw *protocol2.PacketWriter, entry *CharacterEntry) {
 	pw.WriteString(entry.Name)
 	pw.WriteString(entry.WorldName)
 	pw.WriteUint32(entry.WorldIp)
 	pw.WriteUint16(entry.WorldPort)
 }
 
-func writeCharacterList(pw *protocol.PacketWriter, charList *CharacterList) {
+func writeCharacterList(pw *protocol2.PacketWriter, charList *CharacterList) {
 	pw.WriteByte(uint8(len(charList.Characters)))
 	for _, entry := range charList.Characters {
 		writeCharacterEntry(pw, entry)
@@ -140,7 +140,7 @@ type Motd struct {
 	Message string
 }
 
-func parseMotd(packetReader *protocol.PacketReader) (*Motd, error) {
+func parseMotd(packetReader *protocol2.PacketReader) (*Motd, error) {
 	data := packetReader.ReadString()
 	if packetReader.Err() != nil {
 		return nil, packetReader.Err()

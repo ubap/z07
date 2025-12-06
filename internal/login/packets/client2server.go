@@ -2,8 +2,8 @@ package packets
 
 import (
 	"errors"
-	"goTibia/protocol"
-	"goTibia/protocol/crypto"
+	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/protocol/crypto"
 )
 
 // ClientCredentialPacket is a special packet. It's the first packet sent by the client to the server
@@ -19,7 +19,7 @@ type ClientCredentialPacket struct {
 	Password      string
 }
 
-func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
+func (lp *ClientCredentialPacket) Encode(pw *protocol2.PacketWriter) {
 	pw.WriteByte(lp.Protocol)
 	pw.WriteUint16(lp.ClientOS)
 	pw.WriteUint16(lp.ClientVersion)
@@ -28,7 +28,7 @@ func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 	pw.WriteUint32(lp.PicSignature)
 
 	// RSA Encrypted part starts here
-	toEncrypt := protocol.NewPacketWriter()
+	toEncrypt := protocol2.NewPacketWriter()
 
 	toEncrypt.WriteByte(0x00) // Write the check check byte
 	toEncrypt.WriteUint32(lp.XTEAKey[0])
@@ -48,7 +48,7 @@ func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 	pw.WriteBytes(encryptedBlock)
 }
 
-func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredentialPacket, error) {
+func ParseCredentialsPacket(packetReader *protocol2.PacketReader) (*ClientCredentialPacket, error) {
 	packet := &ClientCredentialPacket{}
 
 	packet.Protocol = packetReader.ReadByte()
@@ -64,7 +64,7 @@ func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredent
 	}
 
 	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
-	decryptedBlockReader := protocol.NewPacketReader(decryptedBlock)
+	decryptedBlockReader := protocol2.NewPacketReader(decryptedBlock)
 	checkByte := decryptedBlockReader.ReadByte()
 	if checkByte != 0x00 {
 		return nil, errors.New("invalid checkByte")

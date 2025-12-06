@@ -3,7 +3,7 @@ package protocol_test
 import (
 	"bytes"
 	"encoding/binary"
-	"goTibia/protocol"
+	"goTibia/internal/protocol"
 	"io"
 	"testing"
 

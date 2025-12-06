@@ -3,7 +3,7 @@ package protocol_test
 import (
 	"bytes"
 	"encoding/binary"
-	"goTibia/protocol"
+	protocol2 "goTibia/internal/protocol"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,13 +14,13 @@ type MockPacket struct {
 	Content string
 }
 
-func (mp *MockPacket) Encode(w *protocol.PacketWriter) {
+func (mp *MockPacket) Encode(w *protocol2.PacketWriter) {
 	w.WriteString(mp.Content)
 }
 
 func TestConnection_WriteMessage_Unencrypted(t *testing.T) {
 	mock := NewMockConn()
-	conn := protocol.NewConnection(mock)
+	conn := protocol2.NewConnection(mock)
 
 	// We are not enabling XTEA, so it should send plain bytes prefixed by length.
 	payload := []byte{0xAA, 0xBB, 0xCC}
@@ -39,7 +39,7 @@ func TestConnection_WriteMessage_Unencrypted(t *testing.T) {
 
 func TestConnection_ReadMessage_Unencrypted(t *testing.T) {
 	mock := NewMockConn()
-	conn := protocol.NewConnection(mock)
+	conn := protocol2.NewConnection(mock)
 
 	// Prepare Input: [Length=4] [0xDE, 0xAD, 0xBE, 0xEF]
 	payload := []byte{0xDE, 0xAD, 0xBE, 0xEF}

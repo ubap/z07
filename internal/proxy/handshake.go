@@ -2,22 +2,22 @@ package proxy
 
 import (
 	"fmt"
-	"goTibia/protocol"
+	protocol2 "goTibia/internal/protocol"
 	"log"
 )
 
 type XTEAPacket interface {
-	protocol.Encodable
+	protocol2.Encodable
 	GetXTEAKey() [4]uint32
 }
 
 // InitSession handles the Client -> Proxy -> Server flow for initial handshake packets.
 func InitSession[T XTEAPacket](
 	logPrefix string,
-	client *protocol.Connection,
+	client *protocol2.Connection,
 	targetAddr string,
-	parser func(*protocol.PacketReader) (T, error),
-) (T, *protocol.Connection, error) {
+	parser func(*protocol2.PacketReader) (T, error),
+) (T, *protocol2.Connection, error) {
 
 	var empty T // Zero value for error returns
 

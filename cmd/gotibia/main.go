@@ -20,16 +20,16 @@
 package main
 
 import (
-	"goTibia/handlers/game"
-	"goTibia/handlers/login"
-	"goTibia/proxy"
-	"goTibia/resources"
+	"goTibia/internal/assets"
+	"goTibia/internal/game"
+	"goTibia/internal/login"
+	"goTibia/internal/proxy"
 	"log"
 	"sync"
 )
 
 func main() {
-	if err := resources.LoadItemsJson("data/772/items.json"); err != nil {
+	if err := assets.LoadItemsJson("data/772/items.json"); err != nil {
 		log.Fatalf("Critical Error: %v", err)
 	}
 

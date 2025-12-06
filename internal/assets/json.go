@@ -1,4 +1,4 @@
-package resources
+package assets
 
 type ItemType struct {
 	ID   uint16 `json:"id"`

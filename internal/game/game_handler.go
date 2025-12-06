@@ -2,22 +2,20 @@ package game
 
 import (
 	"fmt"
-	"goTibia/bot"
-	"goTibia/game/state"
-	"goTibia/handlers/game/packets"
-	"goTibia/protocol"
-	"goTibia/proxy"
+	"goTibia/internal/game/packets"
+	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/proxy"
 	"log"
 )
 
 type GameHandler struct {
 	TargetAddr string
-	State      *state.GameState
-	Bot        bot.Bot
+	State      *GameState
+	Bot        Bot
 }
 
-func (h *GameHandler) Handle(client *protocol.Connection) {
-	h.State = state.New()
+func (h *GameHandler) Handle(client *protocol2.Connection) {
+	h.State = New()
 
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
@@ -44,7 +42,7 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	// Loop B: Client -> Server
 	go h.pipe(client, protoServerConn, "C2S", errChan)
 
-	h.Bot = *bot.New(h.State, protoServerConn, client)
+	h.Bot = *NewBot(h.State, protoServerConn, client)
 	h.Bot.Start()
 
 	// Wait for the first error (disconnect)
@@ -53,7 +51,7 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 }
 
 // pipe moves data from src to dst indefinitely.
-func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
+func (h *GameHandler) pipe(src, dst *protocol2.Connection, tag string, errChan chan<- error) {
 	for {
 		// TODO: The proxy could forward raw, unecrypted message right away. This will reduce latency.
 		// Right now I can't think of a scenario where we want to edit game packets on the fly.
@@ -75,7 +73,7 @@ func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan ch
 	}
 }
 
-func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
+func (h *GameHandler) processPacketsFromServer(packetReader *protocol2.PacketReader) {
 	for packetReader.Remaining() > 0 {
 		opcode := packetReader.ReadByte()
 		packet, err := packets.ParseS2CPacket(opcode, packetReader)

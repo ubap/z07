@@ -1,9 +1,9 @@
 package login
 
 import (
-	"goTibia/handlers/login/packets"
-	"goTibia/protocol"
-	"goTibia/proxy"
+	"goTibia/internal/login/packets"
+	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/proxy"
 	"log"
 	"strconv"
 	"time"
@@ -14,7 +14,7 @@ type LoginHandler struct {
 	ProxyMOTD  string
 }
 
-func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
+func (h *LoginHandler) Handle(protoClientConn *protocol2.Connection) {
 	log.Printf("[Login] New Connection: %s", protoClientConn.RemoteAddr())
 
 	_, protoServerConn, err := proxy.InitSession(
@@ -60,7 +60,7 @@ func injectProxyGameworldIP(message *packets.LoginResultMessage) {
 	for _, c := range message.CharacterList.Characters {
 
 		// TODO: Extract configuration - do not hardcode
-		ip, err := protocol.StringToIP("192.168.1.140")
+		ip, err := protocol2.StringToIP("192.168.1.140")
 		if err != nil {
 			panic("StringToIP failed")
 		}

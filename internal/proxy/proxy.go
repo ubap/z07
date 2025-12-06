@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"fmt"
-	"goTibia/protocol"
+	"goTibia/internal/protocol"
 	"log"
 	"net"
 	"time"

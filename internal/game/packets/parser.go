@@ -2,7 +2,7 @@ package packets
 
 import (
 	"errors"
-	"goTibia/protocol"
+	"goTibia/internal/protocol"
 )
 
 // ErrUnknownOpcode is returned when we don't have a parser for this ID.

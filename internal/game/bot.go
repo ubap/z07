@@ -1,9 +1,8 @@
-package bot
+package game
 
 import (
-	"goTibia/game/state"
-	"goTibia/handlers/game/packets"
-	"goTibia/protocol"
+	"goTibia/internal/game/packets"
+	"goTibia/internal/protocol"
 	"log"
 	"sync"
 	"time"
@@ -11,7 +10,7 @@ import (
 
 type Bot struct {
 	// Data Source (Read-Only mostly)
-	State *state.GameState
+	State *GameState
 
 	ServerConn *protocol.Connection
 	ClientConn *protocol.Connection
@@ -21,7 +20,7 @@ type Bot struct {
 	wg       sync.WaitGroup
 }
 
-func New(gameState *state.GameState, server, client *protocol.Connection) *Bot {
+func NewBot(gameState *GameState, server, client *protocol.Connection) *Bot {
 	return &Bot{
 		State:      gameState,
 		ServerConn: server,
