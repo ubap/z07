@@ -83,7 +83,7 @@ type AddInventoryItemMsg struct {
 }
 
 type RemoveInventoryItemMsg struct {
-	Slot uint8
+	Slot domain.InventorySlot
 }
 
 type SayMsg struct {
@@ -261,6 +261,6 @@ func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, 
 
 func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryItemMsg, error) {
 	rii := &RemoveInventoryItemMsg{}
-	rii.Slot = pr.ReadByte()
+	rii.Slot = domain.InventorySlot(pr.ReadByte())
 	return rii, nil
 }

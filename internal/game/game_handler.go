@@ -110,18 +110,13 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.AddTileThingMsg:
 		log.Printf("[Game] AddTileThingMsg %v", p)
 	case *packets.AddInventoryItemMsg:
-		log.Printf("[Game] AddInventoryItemMsg %v", p)
-		h.addInventoryItem(p)
+		h.State.SetInventoryItem(p.Slot, p.Item)
 	case *packets.RemoveInventoryItemMsg:
-		log.Printf("[Game] RemoveInventoryItemMsg %v", p)
+		h.State.RemoveInventoryItem(p.Slot)
 	case *packets.PingMsg:
 		// Ignore
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)
 
 	}
-}
-
-func (h *GameHandler) addInventoryItem(msg *packets.AddInventoryItemMsg) {
-	h.State.SetInventoryItem(msg.Slot, msg.Item)
 }

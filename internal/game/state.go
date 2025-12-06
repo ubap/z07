@@ -51,7 +51,17 @@ func (s *GameState) SetPosition(pos domain.Position) {
 }
 
 func (s *GameState) SetInventoryItem(slot domain.InventorySlot, item domain.Item) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.Inventory[slot] = item
+}
+
+func (s *GameState) RemoveInventoryItem(slot domain.InventorySlot) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.Inventory, slot)
 }
 
 func (s *GameState) GetName() string {
