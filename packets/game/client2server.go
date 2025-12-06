@@ -6,7 +6,6 @@ import (
 	"goTibia/protocol/crypto"
 )
 
-// LoginRequest is a special packet. It's the first packet sent by the client to the server
 type LoginRequest struct {
 	Protocol      uint8
 	ClientOS      uint16

@@ -7,8 +7,8 @@ import (
 )
 
 type XTEAPacket interface {
-	protocol.Encodable     // It must be sendable
-	GetXTEAKey() [4]uint32 // It must provide the key
+	protocol.Encodable
+	GetXTEAKey() [4]uint32
 }
 
 // InitSession handles the Client -> Proxy -> Server flow for initial handshake packets.
