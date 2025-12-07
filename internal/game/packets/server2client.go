@@ -69,10 +69,6 @@ type PlayerIconsMsg struct {
 	Icons uint8
 }
 
-type ContainerMsg struct {
-	ContainerID uint8
-}
-
 type AddInventoryItemMsg struct {
 	Slot domain.EquipmentSlot
 	Item domain.Item
@@ -255,4 +251,36 @@ func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryIte
 	rii := &RemoveInventoryItemMsg{}
 	rii.Slot = domain.EquipmentSlot(pr.ReadByte())
 	return rii, nil
+}
+
+type OpenContainerMsg struct {
+	ContainerID   uint8
+	ContainerItem domain.Item
+	ContainerName string
+	Capacity      uint8
+	HasParent     bool
+	Items         []domain.Item
+}
+
+func ParseOpenContainerMsg(pr *protocol.PacketReader) (*OpenContainerMsg, error) {
+
+	cm := &OpenContainerMsg{}
+
+	cm.ContainerID = pr.ReadByte()
+	cm.ContainerItem = readItem(pr)
+	cm.ContainerName = pr.ReadString()
+	cm.Capacity = pr.ReadByte()
+	cm.HasParent = pr.ReadBool()
+
+	itemCount := pr.ReadByte()
+
+	// Pre-allocate the slice to avoid resizing overhead
+	cm.Items = make([]domain.Item, 0, itemCount)
+
+	for i := 0; i < int(itemCount); i++ {
+		item := readItem(pr)
+		cm.Items = append(cm.Items, item)
+	}
+
+	return cm, nil
 }

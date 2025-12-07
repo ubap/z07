@@ -53,6 +53,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 		return ParsePlayerIcons(pr)
 	case S2CServerClosed:
 		return ParseServerClosedMsg(pr)
+	case S2COpenContainer:
+		return ParseOpenContainerMsg(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

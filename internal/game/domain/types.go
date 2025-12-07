@@ -7,6 +7,20 @@ type Coordinate struct {
 	Z    uint8
 }
 
+type Container struct {
+	// 1. Identification
+	ID     uint8  // The window index (0-15). Crucial for logic.
+	ItemID uint16 // The visual ID (e.g., 1988 for Brown Backpack).
+	Name   string
+
+	// 2. State
+	Capacity  uint8 // Total slots available (e.g. 20).
+	HasParent bool  // Useful to know if this is inside another container.
+
+	// 3. Contents
+	Items []Item
+}
+
 type Item struct {
 	ID       uint16
 	Count    uint8 // Used for stack count, fluid type, or rune charges

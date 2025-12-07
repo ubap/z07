@@ -111,6 +111,7 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
 		h.State.SetPlayerId(p.PlayerId)
+	case *packets.PingMsg: // Ignore
 	case *packets.MapDescriptionMsg:
 		h.State.SetPlayerPos(p.PlayerPos)
 	case *packets.MoveCreatureMsg:
@@ -135,8 +136,9 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 		h.State.SetEquipment(p.Slot, p.Item)
 	case *packets.RemoveInventoryItemMsg:
 		h.State.ClearEquipmentSlot(p.Slot)
-	case *packets.PingMsg:
-		// Ignore
+	case *packets.OpenContainerMsg:
+		log.Printf("[Game] OpenContainerMsg %v", p)
+
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)
 

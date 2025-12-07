@@ -9,8 +9,9 @@ import (
 // It must be thread-safe because the Network Loop writes to it
 // and the Logic Loop reads from it simultaneously.
 type GameState struct {
-	player    domain.Player
-	equipment [11]domain.Item
+	player     domain.Player
+	equipment  [11]domain.Item
+	containers [16]*domain.Container // nil means closed
 
 	mu sync.RWMutex
 }
