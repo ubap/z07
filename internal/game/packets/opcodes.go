@@ -17,6 +17,7 @@ const (
 	S2CMapSliceSouth       uint8 = 0x67
 	S2CMapSliceWest        uint8 = 0x68
 	S2CAddTileThing        uint8 = 0x6A
+	S2CUpdateTileItem      uint8 = 0x6B
 	S2CRemoveTileThing     uint8 = 0x6C
 	S2CMoveCreature        uint8 = 0x6D
 	S2COpenContainer       uint8 = 0x6E

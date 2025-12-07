@@ -339,3 +339,22 @@ func ParseCloseContainerMsg(pr *protocol.PacketReader) (*CloseContainerMsg, erro
 
 	return ccm, nil
 }
+
+type UpdateTileItemMsg struct {
+	Position domain.Coordinate
+	Stackpos uint8
+	Item     domain.Item
+}
+
+func ParseUpdateTileItemMsg(pr *protocol.PacketReader) (*UpdateTileItemMsg, error) {
+
+	utim := &UpdateTileItemMsg{}
+
+	utim.Position = readPosition(pr)
+	utim.Stackpos = pr.ReadByte()
+	utim.Item = readItem(pr)
+
+	// TODO - Item can be creature !!
+
+	return utim, nil
+}
