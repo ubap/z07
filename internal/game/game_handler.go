@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"goTibia/internal/bot"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/game/packets"
 	"goTibia/internal/game/state"
 	"goTibia/internal/protocol"
@@ -117,7 +118,7 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:
-		log.Printf("[Game] MagicEffect %v", p)
+		// log.Printf("[Game] MagicEffect %v", p)
 	case *packets.RemoveTileThingMsg:
 		// log.Printf("[Game] RemoveTileThingMsg %v", p)
 	case *packets.RemoveTileCreatureMsg:
@@ -137,18 +138,31 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.RemoveInventoryItemMsg:
 		h.State.ClearEquipmentSlot(p.Slot)
 	case *packets.OpenContainerMsg:
-		log.Printf("[Game] OpenContainerMsg %v", p)
+		h.handleContainerOpen(p)
 	case *packets.CloseContainerMsg:
-		log.Printf("[Game] CloseContainerMsg %v", p)
+		h.State.CloseContainer(p.ContainerID)
 	case *packets.RemoveContainerItemMsg:
-		log.Printf("[Game] RemoveContainerItemMsg %v", p)
+		h.State.RemoveContainerItem(p.ContainerID, p.Slot)
 	case *packets.AddContainerItemMsg:
-		log.Printf("[Game] AddContainerItemMsg %v", p)
+		h.State.AddContainerItem(p.ContainerID, p.Item)
 	case *packets.UpdateContainerItemMsg:
-		log.Printf("[Game] UpdateContainerItemMsg %v", p)
+		h.State.UpdateContainerItem(p.ContainerID, p.Slot, p.Item)
 
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)
 
 	}
+}
+
+func (h *GameHandler) handleContainerOpen(p *packets.OpenContainerMsg) {
+	// 1. Translate Packet -> Domain
+	container := domain.Container{
+		ID:       p.ContainerID,
+		ItemID:   p.ContainerItem.ID,
+		Name:     p.ContainerName,
+		Capacity: p.Capacity,
+		Items:    p.Items,
+	}
+
+	h.State.OpenContainer(container)
 }
