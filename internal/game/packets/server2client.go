@@ -284,3 +284,30 @@ func ParseOpenContainerMsg(pr *protocol.PacketReader) (*OpenContainerMsg, error)
 
 	return cm, nil
 }
+
+type RemoveContainerItemMsg struct {
+	ContainerID uint8
+	Slot        uint8
+}
+
+func ParseRemoveContainerItemMsg(pr *protocol.PacketReader) (*RemoveContainerItemMsg, error) {
+	rcim := &RemoveContainerItemMsg{}
+
+	rcim.ContainerID = pr.ReadByte()
+	rcim.Slot = pr.ReadByte()
+
+	return rcim, nil
+}
+
+type AddContainerItemMsg struct {
+	ContainerID uint8
+	Item        domain.Item
+}
+
+func ParseAddContainerItemMsg(pr *protocol.PacketReader) (*AddContainerItemMsg, error) {
+	acim := &AddContainerItemMsg{}
+	acim.ContainerID = pr.ReadByte()
+	acim.Item = readItem(pr)
+
+	return acim, nil
+}

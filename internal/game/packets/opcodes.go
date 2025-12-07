@@ -20,6 +20,8 @@ const (
 	S2CRemoveTileThing     uint8 = 0x6C
 	S2CMoveCreature        uint8 = 0x6D
 	S2COpenContainer       uint8 = 0x6E
+	S2CAddContainerItem    uint8 = 0x70
+	S2CRemoveContainerItem uint8 = 0x72
 	S2CAddInventoryItem    uint8 = 0x78
 	S2CRemoveInventoryItem uint8 = 0x79
 	S2CWorldLight          uint8 = 0x82
