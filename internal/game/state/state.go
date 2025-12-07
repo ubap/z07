@@ -2,7 +2,6 @@ package state
 
 import (
 	"goTibia/internal/game/domain"
-	"log"
 	"sync"
 )
 
@@ -145,7 +144,6 @@ func (gs *GameState) UpdateContainerItem(cId uint8, slot uint8, item domain.Item
 	}
 
 	if int(slot) >= len(container.Items) {
-		log.Printf("Desync error: Update slot %d but len is %d", slot, len(container.Items))
 		return
 	}
 
