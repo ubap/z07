@@ -311,3 +311,19 @@ func ParseAddContainerItemMsg(pr *protocol.PacketReader) (*AddContainerItemMsg, 
 
 	return acim, nil
 }
+
+type UpdateContainerItemMsg struct {
+	ContainerID uint8
+	Slot        uint8
+	Item        domain.Item
+}
+
+func ParseUpdateContainerItemMsg(pr *protocol.PacketReader) (*UpdateContainerItemMsg, error) {
+	ucim := &UpdateContainerItemMsg{}
+
+	ucim.ContainerID = pr.ReadByte()
+	ucim.Slot = pr.ReadByte()
+	ucim.Item = readItem(pr)
+
+	return ucim, nil
+}
