@@ -55,6 +55,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 		return ParseServerClosedMsg(pr)
 	case S2COpenContainer:
 		return ParseOpenContainerMsg(pr)
+	case S2CCloseContainer:
+		return ParseCloseContainerMsg(pr)
 	case S2CRemoveContainerItem:
 		return ParseRemoveContainerItemMsg(pr)
 	case S2CAddContainerItem:

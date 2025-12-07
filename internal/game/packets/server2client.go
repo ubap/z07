@@ -327,3 +327,15 @@ func ParseUpdateContainerItemMsg(pr *protocol.PacketReader) (*UpdateContainerIte
 
 	return ucim, nil
 }
+
+type CloseContainerMsg struct {
+	ContainerID uint8
+}
+
+func ParseCloseContainerMsg(pr *protocol.PacketReader) (*CloseContainerMsg, error) {
+	ccm := &CloseContainerMsg{}
+
+	ccm.ContainerID = pr.ReadByte()
+
+	return ccm, nil
+}

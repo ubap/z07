@@ -138,6 +138,8 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 		h.State.ClearEquipmentSlot(p.Slot)
 	case *packets.OpenContainerMsg:
 		log.Printf("[Game] OpenContainerMsg %v", p)
+	case *packets.CloseContainerMsg:
+		log.Printf("[Game] CloseContainerMsg %v", p)
 	case *packets.RemoveContainerItemMsg:
 		log.Printf("[Game] RemoveContainerItemMsg %v", p)
 	case *packets.AddContainerItemMsg:
