@@ -1,0 +1,2 @@
+packetReader -> byte[]
+only build packetReader where needed (it's built to early most likely)
