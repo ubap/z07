@@ -1,4 +1,6 @@
 .idea/
+.vscode/
+__debug_bin*
 
 /goTibia
 data/
