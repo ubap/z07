@@ -3,29 +3,31 @@ package bot
 import (
 	"goTibia/internal/game/packets"
 	"goTibia/internal/game/state"
+	"goTibia/internal/protocol"
 	"log"
 	"sync"
 	"time"
 )
 
 type Bot struct {
-	Outbox      chan packets.C2SPacket
-	State       *state.GameState
-	UserActions chan packets.C2SPacket
+	state *state.GameState
 
-	stopChan chan struct{}  // The broadcast channel
-	wg       sync.WaitGroup // To wait for modules to finish
-	stopOnce sync.Once      // To ensure we close the channel only once
+	UserActions chan packets.C2SPacket // packets sent by client to server
+
+	clientConn *protocol.Connection
+	stopChan   chan struct{}  // The broadcast channel
+	wg         sync.WaitGroup // To wait for modules to finish
+	stopOnce   sync.Once      // To ensure we close the channel only once
 }
 
-func NewBot(state *state.GameState) *Bot {
+func NewBot(state *state.GameState, clientConn *protocol.Connection, serverConn *protocol.Connection) *Bot {
 	return &Bot{
-		State: state,
+		state: state,
 
-		Outbox:      make(chan packets.C2SPacket, 100),
 		UserActions: make(chan packets.C2SPacket, 100),
 
-		stopChan: make(chan struct{}),
+		clientConn: clientConn,
+		stopChan:   make(chan struct{}),
 	}
 }
 
@@ -69,13 +71,17 @@ func (b *Bot) loopLightHack() {
 			return
 
 		case <-ticker.C:
-			pId := b.State.CaptureFrame().Player.ID
+			pId := b.state.CaptureFrame().Player.ID
 
 			if pId == 0 {
 				continue
 			}
 
-			//b.client.SetLocalPlayerLight(0xFF, 215)
+			pkt := &packets.WorldLightMsg{
+				LightLevel: 0xFF,
+				Color:      0xD7,
+			}
+			b.clientConn.SendPacket(pkt)
 		}
 	}
 }

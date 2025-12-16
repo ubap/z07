@@ -47,9 +47,9 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 		State:      gameState,
 		ClientConn: client,
 		ServerConn: protoServerConn,
-		ErrChan:    make(chan error, 3),
+		ErrChan:    make(chan error, 100),
 	}
-	session.Bot = bot.NewBot(gameState)
+	session.Bot = bot.NewBot(gameState, client, protoServerConn)
 
 	go session.loopS2C()
 	go session.loopC2S()

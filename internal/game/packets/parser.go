@@ -18,6 +18,11 @@ type S2CPacket interface {
 	// Opcode() uint8
 }
 
+type InjectablePacket interface {
+	S2CPacket
+	protocol.Encodable
+}
+
 func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext) (S2CPacket, error) {
 	switch opcode {
 	case S2CLoginSuccessful:

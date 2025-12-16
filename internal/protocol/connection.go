@@ -71,6 +71,8 @@ func (c *Connection) ReadMessage() ([]byte, *PacketReader, error) {
 }
 
 func (c *Connection) WriteMessage(payload []byte) error {
+	// TODO: This need mutex
+
 	var dataToSend []byte
 	var err error
 
