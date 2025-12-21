@@ -62,4 +62,17 @@ func TestProcessPacketFromServer(t *testing.T) {
 		item := equip[1]
 		require.Equal(t, uint16(3350), item.ID)
 	})
+
+	t.Run("Handle SetPlayerPos", func(t *testing.T) {
+		targetPos := domain.Coordinate{X: 32368, Y: 32234, Z: 7}
+
+		pkt := &packets.MapDescriptionMsg{
+			PlayerPos: targetPos,
+		}
+
+		session.processPacketFromServer(pkt)
+
+		currentPos := gameState.CaptureFrame().Player.Pos
+		require.Equal(t, targetPos, currentPos, "Player position in state should match the packet position")
+	})
 }
