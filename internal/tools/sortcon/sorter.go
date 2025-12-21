@@ -1,51 +1,14 @@
-package main
+package sortcon
 
 import (
 	"bytes"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
-	"os"
 	"sort"
 	"strconv"
 )
-
-func main() {
-	// GOFILE is automatically set by 'go generate'
-	fileName := os.Getenv("GOFILE")
-	if fileName == "" {
-		if len(os.Args) < 2 {
-			fmt.Println("Usage: Run via 'go generate' or provide a file path as an argument.")
-			os.Exit(1)
-		}
-		fileName = os.Args[1]
-	}
-
-	// 1. Read the file
-	src, err := os.ReadFile(fileName)
-	if err != nil {
-		fmt.Printf("Error reading file: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 2. Process and Sort
-	out, err := SortSource(src)
-	if err != nil {
-		fmt.Printf("Error processing source: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 3. Write back to the same file
-	err = os.WriteFile(fileName, out, 0644)
-	if err != nil {
-		fmt.Printf("Error writing file: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Printf("Successfully sorted constants in %s\n", fileName)
-}
 
 // SortSource parses Go source code, sorts constant blocks, and returns formatted code.
 func SortSource(src []byte) ([]byte, error) {

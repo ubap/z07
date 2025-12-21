@@ -1,7 +1,7 @@
 package packets
 
 // To sort:
-//go:generate go run ../../tools/sortcon/main.go
+//go:generate go run ../../tools/sortcon/cmd/main.go
 
 type S2COpcode uint8
 type C2SOpcode uint8

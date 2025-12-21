@@ -1,4 +1,4 @@
-package main
+package sortcon
 
 import (
 	"strings"
