@@ -41,9 +41,7 @@ func main() {
 		ProxyMOTD:  "Welcome to GoTibia Proxy!",
 	}
 
-	gameHandler := &game.GameHandler{
-		TargetAddr: "world.fibula.app:7172",
-	}
+	gameHandler := game.NewGameHandler("world.fibula.app:7172")
 
 	go func() {
 		defer wg.Done()

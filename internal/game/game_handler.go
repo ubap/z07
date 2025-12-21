@@ -11,18 +11,25 @@ import (
 )
 
 type GameHandler struct {
-	TargetAddr string
+	TargetAddr         string
+	SessionInitializer func(string, protocol.Connection) (*packets.LoginRequest, protocol.Connection, error)
+	// Hook for testing or monitoring
+	OnSessionStart func(s *GameSession)
+}
+
+func NewGameHandler(target string) *GameHandler {
+	return &GameHandler{
+		TargetAddr: target,
+		SessionInitializer: func(addr string, conn protocol.Connection) (*packets.LoginRequest, protocol.Connection, error) {
+			return proxy.InitSession("Game", conn, addr, packets.ParseLoginRequest)
+		},
+	}
 }
 
 func (h *GameHandler) Handle(client protocol.Connection) {
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
-	loginPkt, protoServerConn, err := proxy.InitSession(
-		"Game",
-		client,
-		h.TargetAddr,
-		packets.ParseLoginRequest,
-	)
+	loginPkt, protoServerConn, err := h.SessionInitializer(h.TargetAddr, client)
 	if err != nil {
 		log.Printf("Game: Failed to initialize session for %s: %v", client.RemoteAddr(), err)
 		return
@@ -33,6 +40,9 @@ func (h *GameHandler) Handle(client protocol.Connection) {
 	gameState.SetPlayerName(loginPkt.CharacterName)
 
 	session := newGameSession(client, protoServerConn, gameState)
+	if h.OnSessionStart != nil {
+		h.OnSessionStart(session)
+	}
 
 	go session.loopS2C()
 	go session.loopC2S()
