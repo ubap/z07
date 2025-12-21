@@ -1,0 +1,1 @@
+go test -v ./... | grep -E -c "^--- (PASS|FAIL)"
