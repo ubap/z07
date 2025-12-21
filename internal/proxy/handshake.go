@@ -14,10 +14,10 @@ type XTEAPacket interface {
 // InitSession handles the Client -> Proxy -> Server flow for initial handshake packets.
 func InitSession[T XTEAPacket](
 	logPrefix string,
-	client *protocol.Connection,
+	client protocol.Connection,
 	targetAddr string,
 	parser func(*protocol.PacketReader) (T, error),
-) (T, *protocol.Connection, error) {
+) (T, protocol.Connection, error) {
 
 	var empty T // Zero value for error returns
 

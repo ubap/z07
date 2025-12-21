@@ -14,7 +14,7 @@ type LoginHandler struct {
 	ProxyMOTD  string
 }
 
-func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
+func (h *LoginHandler) Handle(protoClientConn protocol.Connection) {
 	log.Printf("[Login] New Connection: %s", protoClientConn.RemoteAddr())
 
 	_, protoServerConn, err := proxy.InitSession(

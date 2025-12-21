@@ -9,7 +9,7 @@ import (
 )
 
 type ConnectionHandler interface {
-	Handle(client *protocol.Connection)
+	Handle(client protocol.Connection)
 }
 
 type Server struct {
@@ -54,7 +54,7 @@ func (s *Server) Start() error {
 	}
 }
 
-func ConnectToBackend(address string) (*protocol.Connection, error) {
+func ConnectToBackend(address string) (protocol.Connection, error) {
 	conn, err := net.DialTimeout("tcp", address, 5*time.Second)
 	if err != nil {
 		return nil, fmt.Errorf("backend unavailable at %s: %w", address, err)

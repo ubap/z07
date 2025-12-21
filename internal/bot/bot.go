@@ -14,13 +14,13 @@ type Bot struct {
 
 	UserActions chan []byte // packets sent by client to server
 
-	clientConn *protocol.Connection
+	clientConn protocol.Connection
 	stopChan   chan struct{}  // The broadcast channel
 	wg         sync.WaitGroup // To wait for modules to finish
 	stopOnce   sync.Once      // To ensure we close the channel only once
 }
 
-func NewBot(state *state.GameState, clientConn *protocol.Connection, serverConn *protocol.Connection) *Bot {
+func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn protocol.Connection) *Bot {
 	return &Bot{
 		state: state,
 

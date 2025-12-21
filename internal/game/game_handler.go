@@ -2,7 +2,6 @@ package game
 
 import (
 	"fmt"
-	"goTibia/internal/bot"
 	"goTibia/internal/game/domain"
 	"goTibia/internal/game/packets"
 	"goTibia/internal/game/state"
@@ -15,17 +14,7 @@ type GameHandler struct {
 	TargetAddr string
 }
 
-type GameSession struct {
-	ID               string
-	State            *state.GameState
-	Bot              *bot.Bot
-	ClientConn       *protocol.Connection
-	ServerConn       *protocol.Connection
-	c2sRawPacketChan chan []byte // Used to listen to C2S packets
-	ErrChan          chan error
-}
-
-func (h *GameHandler) Handle(client *protocol.Connection) {
+func (h *GameHandler) Handle(client protocol.Connection) {
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
 	loginPkt, protoServerConn, err := proxy.InitSession(
@@ -43,15 +32,7 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	gameState := state.New()
 	gameState.SetPlayerName(loginPkt.CharacterName)
 
-	session := &GameSession{
-		ID:               client.RemoteAddr().String(),
-		State:            gameState,
-		ClientConn:       client,
-		ServerConn:       protoServerConn,
-		c2sRawPacketChan: make(chan []byte, 1024),
-		ErrChan:          make(chan error, 100),
-	}
-	session.Bot = bot.NewBot(gameState, client, protoServerConn)
+	session := newGameSession(client, protoServerConn, gameState)
 
 	go session.loopS2C()
 	go session.loopC2S()

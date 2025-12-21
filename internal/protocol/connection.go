@@ -8,9 +8,18 @@ import (
 	"net"
 )
 
+type Connection interface {
+	ReadMessage() ([]byte, error)
+	WriteMessage([]byte) error
+	SendPacket(packet Encodable) error
+	RemoteAddr() net.Addr
+	EnableXTEA(key [4]uint32)
+	Close() error
+}
+
 // Connection is a wrapper around a raw network connection (net.Conn)
 // that understands the Tibia protocol's message framing.
-type Connection struct {
+type connection struct {
 	conn        net.Conn
 	XTEAEnabled bool
 	XTEAKey     [4]uint32
@@ -25,16 +34,16 @@ type Encodable interface {
 }
 
 // NewConnection creates a new protocol-aware connection wrapper.
-func NewConnection(conn net.Conn) *Connection {
-	return &Connection{conn: conn}
+func NewConnection(conn net.Conn) Connection {
+	return &connection{conn: conn}
 }
 
-func (c *Connection) EnableXTEA(key [4]uint32) {
+func (c *connection) EnableXTEA(key [4]uint32) {
 	c.XTEAEnabled = true
 	c.XTEAKey = key
 }
 
-func (c *Connection) ReadMessage() ([]byte, error) {
+func (c *connection) ReadMessage() ([]byte, error) {
 	// Read the header (2 bytes)
 	var header [2]byte
 	if _, err := io.ReadFull(c.conn, header[:]); err != nil {
@@ -70,7 +79,7 @@ func (c *Connection) ReadMessage() ([]byte, error) {
 	return payload, nil
 }
 
-func (c *Connection) WriteMessage(payload []byte) error {
+func (c *connection) WriteMessage(payload []byte) error {
 	// TODO: This need mutex
 
 	var dataToSend []byte
@@ -118,19 +127,15 @@ func (c *Connection) WriteMessage(payload []byte) error {
 	return err
 }
 
-func (c *Connection) Close() error {
+func (c *connection) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Connection) RemoteAddr() net.Addr {
+func (c *connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
 
-func (c *Connection) RawConn() net.Conn {
-	return c.conn
-}
-
-func (c *Connection) SendPacket(packet Encodable) error {
+func (c *connection) SendPacket(packet Encodable) error {
 	// 1. Create (or grab from pool) a Writer
 	writer := NewPacketWriter()
 
