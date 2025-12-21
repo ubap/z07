@@ -16,12 +16,13 @@ type GameHandler struct {
 }
 
 type GameSession struct {
-	ID         string
-	State      *state.GameState
-	Bot        *bot.Bot
-	ClientConn *protocol.Connection
-	ServerConn *protocol.Connection
-	ErrChan    chan error
+	ID               string
+	State            *state.GameState
+	Bot              *bot.Bot
+	ClientConn       *protocol.Connection
+	ServerConn       *protocol.Connection
+	c2sRawPacketChan chan []byte // Used to listen to C2S packets
+	ErrChan          chan error
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
@@ -43,16 +44,18 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	gameState.SetPlayerName(loginPkt.CharacterName)
 
 	session := &GameSession{
-		ID:         client.RemoteAddr().String(),
-		State:      gameState,
-		ClientConn: client,
-		ServerConn: protoServerConn,
-		ErrChan:    make(chan error, 100),
+		ID:               client.RemoteAddr().String(),
+		State:            gameState,
+		ClientConn:       client,
+		ServerConn:       protoServerConn,
+		c2sRawPacketChan: make(chan []byte, 1024),
+		ErrChan:          make(chan error, 100),
 	}
 	session.Bot = bot.NewBot(gameState, client, protoServerConn)
 
 	go session.loopS2C()
 	go session.loopC2S()
+	go session.c2sPacketObserver()
 	go session.Bot.Start()
 
 	disconnectErr := <-session.ErrChan
@@ -89,13 +92,28 @@ func (g *GameSession) loopC2S() {
 			return
 		}
 
+		select {
+		case g.c2sRawPacketChan <- rawMsg:
+			// Successfully queued for processing
+		default:
+			// If the queue is full, this packet is dropped.
+		}
+	}
+}
+
+func (g *GameSession) c2sPacketObserver() {
+	for rawMsg := range g.c2sRawPacketChan {
 		packetReader := protocol.NewPacketReader(rawMsg)
 		opcode := packetReader.ReadByte()
 		packet, err := packets.ParseC2SPacket(opcode, packetReader)
 		if err == nil {
-			g.Bot.UserActions <- packet
+			// This is a non-blocking send to avoid blocking the main C2S loop
+			select {
+			case g.Bot.UserActions <- packet:
+			default:
+				// Handle the case where the bot's channel is full
+			}
 		}
-
 	}
 }
 
