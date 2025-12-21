@@ -40,7 +40,7 @@ func (gs *GameState) SetPlayerId(pId uint32) {
 	gs.player.ID = pId
 }
 
-func (gs *GameState) SetPlayerPos(pos domain.Coordinate) {
+func (gs *GameState) SetPlayerPos(pos domain.Position) {
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 

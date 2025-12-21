@@ -64,7 +64,7 @@ func TestProcessPacketFromServer(t *testing.T) {
 	})
 
 	t.Run("Handle SetPlayerPos", func(t *testing.T) {
-		targetPos := domain.Coordinate{X: 32368, Y: 32234, Z: 7}
+		targetPos := domain.Position{X: 32368, Y: 32234, Z: 7}
 
 		pkt := &packets.MapDescriptionMsg{
 			PlayerPos: targetPos,

@@ -2,7 +2,7 @@ package domain
 
 import "fmt"
 
-type Coordinate struct {
+type Position struct {
 	X, Y uint16
 	Z    uint8
 }
@@ -37,7 +37,7 @@ func (i Item) String() string {
 }
 
 type Tile struct {
-	Position Coordinate
+	Position Position
 	Ground   *Item
 	Items    []Item
 }
@@ -54,7 +54,7 @@ const (
 type Player struct {
 	ID   uint32
 	Name string
-	Pos  Coordinate
+	Pos  Position
 }
 
 type SkillType uint8

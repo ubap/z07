@@ -83,7 +83,7 @@ func (lr *LoginRequest) GetXTEAKey() [4]uint32 {
 }
 
 type LookRequest struct {
-	Pos      domain.Coordinate
+	Pos      domain.Position
 	ItemId   uint16
 	StackPos uint8
 }

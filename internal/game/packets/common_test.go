@@ -14,5 +14,5 @@ func Test_readPosition(t *testing.T) {
 
 	position := readPosition(pr)
 
-	require.Equal(t, domain.Coordinate{X: 0x201, Y: 0x403, Z: 0x5}, position)
+	require.Equal(t, domain.Position{X: 0x201, Y: 0x403, Z: 0x5}, position)
 }
