@@ -55,7 +55,6 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 
 	go session.loopS2C()
 	go session.loopC2S()
-	go session.c2sPacketObserver()
 	go session.Bot.Start()
 
 	disconnectErr := <-session.ErrChan
@@ -72,18 +71,15 @@ func (g *GameSession) loopS2C() {
 			return
 		}
 
-		packet, patch := g.Bot.PatchS2CPacket(rawMsg)
-		if patch {
-			err := g.ClientConn.SendPacket(packet)
-			if err != nil {
-				g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
-				return
-			}
-		} else {
-			if err := g.ClientConn.WriteMessage(rawMsg); err != nil {
-				g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
-				return
-			}
+		patchedMsg, err := g.Bot.PatchS2CPacket(rawMsg)
+		if err != nil {
+			g.ErrChan <- fmt.Errorf("S2C Patch: %w", err)
+			return
+		}
+
+		if err := g.ClientConn.WriteMessage(patchedMsg); err != nil {
+			g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
+			return
 		}
 
 		go g.processPacketsFromServer(rawMsg)
@@ -103,26 +99,10 @@ func (g *GameSession) loopC2S() {
 		}
 
 		select {
-		case g.c2sRawPacketChan <- rawMsg:
+		case g.Bot.UserActions <- rawMsg:
 			// Successfully queued for processing
 		default:
 			// If the queue is full, this packet is dropped.
-		}
-	}
-}
-
-func (g *GameSession) c2sPacketObserver() {
-	for rawMsg := range g.c2sRawPacketChan {
-		packetReader := protocol.NewPacketReader(rawMsg)
-		opcode := packetReader.ReadByte()
-		packet, err := packets.ParseC2SPacket(opcode, packetReader)
-		if err == nil {
-			// This is a non-blocking send to avoid blocking the main C2S loop
-			select {
-			case g.Bot.UserActions <- packet:
-			default:
-				// Handle the case where the bot's channel is full
-			}
 		}
 	}
 }

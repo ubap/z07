@@ -12,7 +12,7 @@ import (
 type Bot struct {
 	state *state.GameState
 
-	UserActions chan packets.C2SPacket // packets sent by client to server
+	UserActions chan []byte // packets sent by client to server
 
 	clientConn *protocol.Connection
 	stopChan   chan struct{}  // The broadcast channel
@@ -24,7 +24,7 @@ func NewBot(state *state.GameState, clientConn *protocol.Connection, serverConn 
 	return &Bot{
 		state: state,
 
-		UserActions: make(chan packets.C2SPacket, 100),
+		UserActions: make(chan []byte, 1024),
 
 		clientConn: clientConn,
 		stopChan:   make(chan struct{}),
@@ -97,19 +97,29 @@ func (b *Bot) loopHandleUserAction() {
 	}
 }
 
-func (b *Bot) handleUserAction(packet packets.C2SPacket) {
+func (b *Bot) handleUserAction(rawMsg []byte) {
+	packetReader := protocol.NewPacketReader(rawMsg)
+	opcode := packetReader.ReadByte()
+	packet, err := packets.ParseC2SPacket(opcode, packetReader)
+	if err != nil {
+		return
+	}
 	switch p := packet.(type) {
 	case *packets.LookRequest:
 		log.Printf("User looked at item ID: %d", p.ItemId)
 	}
 }
 
-func (b *Bot) PatchS2CPacket(data []byte) (protocol.Encodable, bool) {
+// PatchS2CPacket has to return immediately.
+func (b *Bot) PatchS2CPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
 	opcode := pr.ReadByte()
 	switch opcode {
 	case packets.S2CSLoginQueue:
-		return &packets.LoginQueueMsg{Message: "patched for you :)", RetryTimeSeconds: 1}, true
+		pw := protocol.NewPacketWriter()
+		msg := packets.LoginQueueMsg{Message: "Queue hack active.", RetryTimeSeconds: 1}
+		msg.Encode(pw)
+		return pw.GetBytes()
 	}
-	return nil, false
+	return data, nil
 }
