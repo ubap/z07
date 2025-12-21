@@ -1,10 +1,7 @@
 package packets
 
-/**
-To sort:
-Mac: pbpaste | sort -k 5 | pbcopy
-Linux: xclip -o | sort -k 5 | xclip -sel clip
-*/
+// To sort:
+//go:generate go run ../../tools/sortcon/main.go
 
 type S2COpcode uint8
 type C2SOpcode uint8
