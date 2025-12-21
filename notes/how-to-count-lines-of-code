@@ -1,0 +1,4 @@
+brew install cloc
+
+echo "--- PRODUCTION CODE ---" && cloc . --not-match-f='_test\.go$' --quiet --hide-rate && \
+echo "\n--- TEST CODE ---" && cloc . --match-f='_test\.go$' --quiet --hide-rate
