@@ -191,3 +191,19 @@ func (gs *GameState) UpdateTileItem(position domain.Position, stackpos uint8, it
 
 	gs.worldMap[position].Items[stackpos] = item
 }
+
+func (gs *GameState) AddTileItem(position domain.Position, item domain.Item) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	if _, ok := gs.worldMap[position]; !ok {
+		fmt.Printf("AddTileItem: position %v not found in worldMap\n", position)
+		return
+	}
+	// 1. Get the copy
+	tile := gs.worldMap[position]
+	// 2. Update the copy
+	tile.Items = append(tile.Items, item)
+	// 3. Put the updated copy back into the map
+	gs.worldMap[position] = tile
+}
