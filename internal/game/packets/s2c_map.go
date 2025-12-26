@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	MapWidth  = 18
-	MapHeight = 14
+	ClientViewportX = 8
+	ClientViewportY = 6
 
 	TileDataCreatureKnown   = 0x62 // 97
 	TileDataCreatureUnknown = 0x61 // 98
@@ -25,25 +25,36 @@ func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction domain.D
 		PlayerPos: ctx.PlayerPosition,
 	}
 
-	width := MapWidth
-	height := MapHeight
+	var x int
+	var y int
+	var z = int(msg.PlayerPos.Z)
+	var width = ClientViewportX*2 + 2
+	var height = ClientViewportY*2 + 2
 
 	switch direction {
 	case domain.North:
 		msg.PlayerPos.Y = ctx.PlayerPosition.Y - 1
+		x = int(msg.PlayerPos.X) - ClientViewportX
+		y = int(msg.PlayerPos.Y) - ClientViewportY
 		height = 1
 	case domain.South:
 		msg.PlayerPos.Y = ctx.PlayerPosition.Y + 1
+		x = int(msg.PlayerPos.X) - ClientViewportX
+		y = int(msg.PlayerPos.Y) + ClientViewportY + 1
 		height = 1
 	case domain.West:
 		msg.PlayerPos.X = ctx.PlayerPosition.X - 1
+		x = int(msg.PlayerPos.X) - ClientViewportX
+		y = int(msg.PlayerPos.Y) - ClientViewportY
 		width = 1
 	case domain.East:
 		msg.PlayerPos.X = ctx.PlayerPosition.X + 1
+		x = int(msg.PlayerPos.X) + ClientViewportX + 1
+		y = int(msg.PlayerPos.Y) - ClientViewportY
 		width = 1
 	}
 
-	tiles, err := parseMapDescription(pr, ctx.PlayerPosition, width, height)
+	tiles, err := parseMapDescription(pr, x, y, z, width, height)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +67,11 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 		PlayerPos: readPosition(pr),
 	}
 
-	tiles, err := parseMapDescription(pr, msg.PlayerPos, MapWidth, MapHeight)
+	var x = int(msg.PlayerPos.X) - ClientViewportX
+	var y = int(msg.PlayerPos.Y) - ClientViewportY
+	var z = int(msg.PlayerPos.Z)
+
+	tiles, err := parseMapDescription(pr, x, y, z, ClientViewportX*2+2, ClientViewportY*2+2)
 	if err != nil {
 		return nil, err
 	}
@@ -64,16 +79,16 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	return msg, err
 }
 
-func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width int, height int) (*map[domain.Position]domain.Tile, error) {
+func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) (*map[domain.Position]domain.Tile, error) {
 	tiles := make(map[domain.Position]domain.Tile)
 
 	// 2. Determine Z-Range
 	// If on surface (z<=7), draw from 7 down to 0.
 	// If underground (z>7), draw from z-2 to z+2.
 	var startZ, endZ, zStep int
-	if pos.Z > 7 {
-		startZ = max(int(pos.Z)-2, 0)
-		endZ = int(pos.Z) + 2 // TODO: Clamp to Max?
+	if z > 7 {
+		startZ = max(z-2, 0)
+		endZ = z + 2 // TODO: Clamp to Max?
 		zStep = 1
 	} else {
 		startZ = 7
@@ -106,7 +121,7 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 
 			// Calculate perspective offset for this floor
 			// Tibia shifts the view when looking at lower floors
-			offsetZ := int(pos.Z) - currentZ
+			offsetZ := z - currentZ
 
 			// Calculate actual X,Y based on linear index
 			// Tibia loop order: for(x) { for(y) }
@@ -114,8 +129,8 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 			ny := tilesProcessed % height
 
 			tilePos := domain.Position{
-				X: uint16(int(pos.X) + nx + offsetZ),
-				Y: uint16(int(pos.Y) + ny + offsetZ),
+				X: uint16(x + nx + offsetZ),
+				Y: uint16(y + ny + offsetZ),
 				Z: uint8(currentZ),
 			}
 
