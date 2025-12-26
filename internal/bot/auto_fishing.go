@@ -9,7 +9,7 @@ import (
 )
 
 func (b *Bot) loopFishing() {
-	ticker := time.NewTicker(5000 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 
 	log.Println("[Bot] Auto fishing started")
@@ -40,7 +40,7 @@ func (b *Bot) loopFishing() {
 			}
 
 			// map is off, invesgiate why
-			//b.serverConn.SendPacket(&pkt)
+			b.serverConn.SendPacket(&pkt)
 		}
 	}
 }
