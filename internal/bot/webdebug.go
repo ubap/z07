@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"fmt"
+	"goTibia/internal/assets"
 	"goTibia/internal/game/domain"
 	"log"
 	"net/http"
@@ -100,15 +101,17 @@ func (b *Bot) handleRenderMap(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// C. Determine what to draw (Creature > Item > Ground)
-			char := "."
-			class := "ground"
-			title := fmt.Sprintf("Pos: %d, %d", x, y)
+			// Determine what to draw
+			groundType := assets.Get(tile.Items[len(tile.Items)-1].ID)
 
-			if len(tile.Items) > 0 {
-				char = "i"
-				class = "item"
-				title += fmt.Sprintf(" | %d items", len(tile.Items))
+			char := " "
+			class := ""
+			title := fmt.Sprintf("%v", groundType)
+
+			if hasAnyBlockingItem(tile) {
+				char = "X"
+			} else {
+				char = "."
 			}
 
 			fmt.Fprintf(w, "<span class='tile %s' title='%s'>%s</span>", class, title, char)
@@ -120,4 +123,17 @@ func (b *Bot) handleRenderMap(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "</div>")
 	fmt.Fprint(w, "<p style='color:#666; font-size:12px;'>Centering logic: Player is always middle. '.' is ground, 'i' is item, 'C' is creature.</p>")
 	fmt.Fprint(w, "</body></html>")
+}
+
+func hasAnyBlockingItem(tile domain.Tile) bool {
+	for _, item := range tile.Items {
+		itemType := assets.Get(item.ID)
+		if itemType.IsGround && itemType.Speed == 0 {
+			return true
+		}
+		if !itemType.IsGround && itemType.IsBlocking {
+			return true
+		}
+	}
+	return false
 }
