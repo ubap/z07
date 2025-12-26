@@ -13,14 +13,14 @@ type GameState struct {
 	player     domain.Player
 	equipment  [11]domain.Item
 	containers [16]*domain.Container // nil means closed
-	worldMap   map[domain.Position]domain.Tile
+	worldMap   map[domain.Position]*domain.Tile
 
 	mu sync.RWMutex
 }
 
 func New() *GameState {
 	return &GameState{
-		worldMap: make(map[domain.Position]domain.Tile),
+		worldMap: make(map[domain.Position]*domain.Tile),
 	}
 }
 
@@ -166,7 +166,7 @@ func (gs *GameState) UpdateContainerItem(cId uint8, slot uint8, item domain.Item
 	container.Items[slot] = item
 }
 
-func (gs *GameState) SetTiles(tiles map[domain.Position]domain.Tile) {
+func (gs *GameState) SetTiles(tiles map[domain.Position]*domain.Tile) {
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 

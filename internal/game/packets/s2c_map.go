@@ -17,7 +17,7 @@ const (
 
 type MapDescriptionMsg struct {
 	PlayerPos domain.Position
-	Tiles     map[domain.Position]domain.Tile
+	Tiles     map[domain.Position]*domain.Tile
 }
 
 func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction domain.Direction) (*MapDescriptionMsg, error) {
@@ -58,7 +58,7 @@ func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction domain.D
 	if err != nil {
 		return nil, err
 	}
-	msg.Tiles = *tiles
+	msg.Tiles = tiles
 	return msg, nil
 }
 
@@ -75,12 +75,12 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	if err != nil {
 		return nil, err
 	}
-	msg.Tiles = *tiles
+	msg.Tiles = tiles
 	return msg, err
 }
 
-func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) (*map[domain.Position]domain.Tile, error) {
-	tiles := make(map[domain.Position]domain.Tile)
+func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) (map[domain.Position]*domain.Tile, error) {
+	tiles := make(map[domain.Position]*domain.Tile)
 
 	// 2. Determine Z-Range
 	// If on surface (z<=7), draw from 7 down to 0.
@@ -142,7 +142,7 @@ func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) 
 		for tilesProcessed >= tilesPerFloor {
 			// 1. Check if we are done with the entire volume
 			if currentZ == endZ {
-				return &tiles, nil
+				return tiles, nil
 			}
 
 			// 2. Move to next floor
@@ -153,9 +153,9 @@ func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) 
 	}
 }
 
-func parseTile(pr *protocol.PacketReader) domain.Tile {
+func parseTile(pr *protocol.PacketReader) *domain.Tile {
 	// 1. Setup the Tile struct
-	t := domain.Tile{
+	t := &domain.Tile{
 		Items: make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
 	}
 
@@ -181,7 +181,7 @@ func parseTile(pr *protocol.PacketReader) domain.Tile {
 			err := readCreatureInMap(pr)
 			if err != nil {
 				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
-				return domain.Tile{}
+				return &domain.Tile{}
 			}
 			continue
 		}

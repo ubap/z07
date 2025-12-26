@@ -125,7 +125,7 @@ func (b *Bot) handleRenderMap(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "</body></html>")
 }
 
-func hasAnyBlockingItem(tile domain.Tile) bool {
+func hasAnyBlockingItem(tile *domain.Tile) bool {
 	for _, item := range tile.Items {
 		itemType := assets.Get(item.ID)
 		if itemType.IsGround && itemType.Speed == 0 {

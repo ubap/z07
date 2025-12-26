@@ -49,8 +49,8 @@ func (b *Bot) findFishPos(frame state.WorldSnapshot, pos domain.Position) *domai
 	for x := pos.X - 7; x <= pos.X+7; x++ {
 		for y := pos.Y - 5; y <= pos.Y+5; y++ {
 			currentPos := domain.Position{X: x, Y: y, Z: pos.Z}
-			tile := frame.WorldMap[currentPos]
-			if tile.Items[0].ID == 4598 {
+			tile, ok := frame.WorldMap[currentPos]
+			if ok && tile.Items[0].ID == 4598 {
 				log.Printf("[Bot] Found water with tile at (%d, %d, %d)", x, y, pos.Z)
 				return &currentPos
 			}
