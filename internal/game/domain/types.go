@@ -55,8 +55,7 @@ func (i Item) String() string {
 }
 
 type Tile struct {
-	Ground Item
-	Items  []Item
+	Items []Item
 }
 
 type Direction uint8

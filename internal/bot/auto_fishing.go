@@ -35,7 +35,7 @@ func (b *Bot) loopFishing() {
 				FromStackPos: 0,
 
 				ToPos:      *fishPos,
-				ToItemId:   tileWithFish.Ground.ID,
+				ToItemId:   tileWithFish.Items[0].ID,
 				ToStackPos: 0,
 			}
 
@@ -46,11 +46,11 @@ func (b *Bot) loopFishing() {
 }
 
 func (b *Bot) findFishPos(frame state.WorldSnapshot, pos domain.Position) *domain.Position {
-	for x := pos.X - 5; x <= pos.X+5; x++ {
+	for x := pos.X - 7; x <= pos.X+7; x++ {
 		for y := pos.Y - 5; y <= pos.Y+5; y++ {
 			currentPos := domain.Position{X: x, Y: y, Z: pos.Z}
 			tile := frame.WorldMap[currentPos]
-			if tile.Ground.ID == 4598 {
+			if tile.Items[0].ID == 4598 {
 				log.Printf("[Bot] Found water with tile at (%d, %d, %d)", x, y, pos.Z)
 				return &currentPos
 			}

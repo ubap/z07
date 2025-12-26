@@ -157,7 +157,7 @@ func (g *GameSession) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.UpdateContainerItemMsg:
 		g.State.UpdateContainerItem(p.ContainerID, p.Slot, p.Item)
 	case *packets.UpdateTileItemMsg:
-		log.Printf("[Game] UpdateTileItem %v", p)
+		g.State.UpdateTileItem(p.Position, p.Stackpos, p.Item)
 	case *packets.PlayerSkillsMsg:
 		log.Printf("[Game] PlayerSkillsMsg %v", p)
 	case *packets.PlayerStatsMsg:

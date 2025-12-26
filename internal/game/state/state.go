@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"goTibia/internal/game/domain"
 	"sync"
 )
@@ -172,4 +173,21 @@ func (gs *GameState) SetTiles(tiles map[domain.Position]domain.Tile) {
 	for pos, tile := range tiles {
 		gs.worldMap[pos] = tile
 	}
+}
+
+func (gs *GameState) UpdateTileItem(position domain.Position, stackpos uint8, item domain.Item) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	if _, ok := gs.worldMap[position]; !ok {
+		fmt.Printf("UpdateTileItem: position %v not found in worldMap\n", position)
+		return
+	}
+
+	if int(stackpos) >= len(gs.worldMap[position].Items) {
+		fmt.Printf("UpdateTileItem: stackpos %d out of range for tile at position %v\n", stackpos, position)
+		return
+	}
+
+	gs.worldMap[position].Items[stackpos] = item
 }
