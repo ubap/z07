@@ -122,9 +122,9 @@ func parseItem(r *bytes.Reader, id uint16) ItemAttributes {
 			item.IsGround = true
 			item.Speed = readUint16(r)
 		case 0x01: // Clip
-			item.IsBlocking = true
+			// Rendering Flag
 		case 0x02: // Bottom
-			item.IsBlocking = true
+			// Rendering Flag
 		case 0x03: // Top
 			// Decorative
 		case 0x04: // Container
@@ -146,10 +146,11 @@ func parseItem(r *bytes.Reader, id uint16) ItemAttributes {
 		case 0x0C: // Blocking
 			item.IsBlocking = true
 		case 0x0D: // Immovable
-			item.IsBlocking = true
+			item.IsPickupable = true
 		case 0x0E: // Block Missiles
 			item.IsMissileBlock = true
 		case 0x0F: // Block Path
+			// for example Magic Walls or Fire Fields
 			item.IsPathBlock = true
 		case 0x10: // Pickupable
 			item.IsPickupable = true
