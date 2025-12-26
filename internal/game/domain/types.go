@@ -38,7 +38,7 @@ func (i Item) String() string {
 
 type Tile struct {
 	Position Position
-	Ground   *Item
+	Ground   Item
 	Items    []Item
 }
 

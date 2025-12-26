@@ -148,7 +148,7 @@ func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
 	}
 
 	groundItem := readItem(pr)
-	t.Ground = &groundItem
+	t.Ground = groundItem
 
 	// 3. Loop: Read Items on top of the ground
 	// We read until we hit a "Skip" marker (>= 0xFF00) which belongs to the NEXT tile.
