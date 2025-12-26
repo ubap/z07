@@ -67,13 +67,13 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width int, height int) (*[]domain.Tile, error) {
 	tiles := make([]domain.Tile, 0, width*height)
 
-	// 2. Determine Z-Range (Protocol 7.72 Logic)
+	// 2. Determine Z-Range
 	// If on surface (z<=7), draw from 7 down to 0.
 	// If underground (z>7), draw from z-2 to z+2.
 	var startZ, endZ, zStep int
 	if pos.Z > 7 {
-		startZ = int(pos.Z) - 2
-		endZ = int(pos.Z) + 2
+		startZ = max(int(pos.Z)-2, 0)
+		endZ = int(pos.Z) + 2 // TODO: Clamp to Max?
 		zStep = 1
 	} else {
 		startZ = 7
@@ -102,12 +102,9 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 		}
 
 		if val >= 0xFF00 {
-			// --- SKIP (RLE) ---
+			// --- SKIP (Run-Length Encoding) ---
 			_ = pr.ReadUint16()            // Consume the peeked value
 			skipCount := int(val&0xFF) + 1 // Lower byte is count, skip is 0 based counter
-
-			// fmt.Printf("  [SKIP] Count: %d (Token: %04X) | Total Processed: %d\n", skipCount, val, tilesProcessed)
-
 			tilesProcessed += skipCount
 		} else {
 			// --- REAL TILE ---
@@ -124,24 +121,14 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 				Z: uint8(currentZ),
 			}
 
-			// fmt.Printf("  [TILE] Parsing %v (Ground ID: %d)...\n", tilePos, val)
-
-			// Parse the items on this tile
 			tile := parseTile(pr, tilePos)
 			tiles = append(tiles, tile)
 		}
 
-		// Check for Floor End
-		// Use a loop because a massive skip (255) could theoretically
-		// skip the remainder of Floor A, all of Floor B (unlikely 18x14=252), and start of Floor C.
+		// skip tiles
 		for tilesProcessed >= tilesPerFloor {
-
 			// 1. Check if we are done with the entire volume
-			if (zStep > 0 && currentZ == endZ) || (zStep < 0 && currentZ == endZ) {
-				// We finished the last floor.
-				// Any remaining 'skip' count is irrelevant (padding).
-				// fmt.Println("--- END MAP DEBUG (Success) ---")
-
+			if currentZ == endZ {
 				return &tiles, nil
 			}
 
@@ -151,7 +138,6 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 			// fmt.Printf("--- MOVING TO FLOOR Z=%d ---\n", currentZ)
 		}
 	}
-
 }
 
 func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
@@ -180,12 +166,6 @@ func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
 
 		if nextVal == TileDataCreatureKnown || nextVal == TileDataCreatureUnknown {
 			// It is a CREATURE, not an ITEM.
-			// We must consume the bytes to keep the stream aligned.
-
-			// Note: For a pure MapDescription parser, we often discard creature data
-			// because creatures are usually tracked via 0x6A/0x6B packets.
-			// However, we MUST read it to advance the cursor.
-
 			err := readCreatureInMap(pr)
 			if err != nil {
 				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
