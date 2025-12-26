@@ -24,6 +24,10 @@ func (h *LoginHandler) Handle(protoClientConn protocol.Connection) {
 		packets.ParseCredentialsPacket,
 	)
 	defer protoServerConn.Close()
+	if err != nil {
+		log.Printf("[Login]: Failed to initialize session for %s: %v", protoClientConn.RemoteAddr(), err)
+		return
+	}
 
 	rawMsg, err := protoServerConn.ReadMessage()
 	if err != nil {
