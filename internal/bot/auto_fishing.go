@@ -13,14 +13,16 @@ func (b *Bot) loopFishing() {
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 
-	log.Println("[Bot] Auto fishing started")
-
 	for {
 		select {
 		case <-b.stopChan:
 			return
 
 		case <-ticker.C:
+			if !b.fishingEnabled {
+				continue
+			}
+
 			frame := b.state.CaptureFrame()
 
 			fishingRod := frame.FindItemInEqAndOpenWindows(fishingRodItemId)

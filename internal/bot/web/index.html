@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>goTibia Dashboard</title>
+</head>
+<body class="bg-[#09090b] text-zinc-100 flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-[#121214] border-r border-zinc-800 flex flex-col p-6 gap-8">
+    <div class="flex items-center gap-3 px-2">
+        <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold">T</div>
+        <h1 class="text-lg font-bold tracking-tight">goTibia</h1>
+    </div>
+
+    <nav class="flex flex-col gap-2">
+        <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2 mb-2">Automation</p>
+
+        <!-- Sidebar Links -->
+        <!-- hx-get fetches the view, hx-target puts it in the main area -->
+        <button hx-get="/views/fishing"
+                hx-target="#main-content"
+                class="flex items-center gap-3 p-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
+            <span>🎣</span> Fishing
+        </button>
+
+        <button class="flex items-center gap-3 p-3 text-zinc-600 cursor-not-allowed">
+            <span>🛡️</span> Healing
+        </button>
+    </nav>
+</aside>
+
+<!-- MAIN CONTENT AREA -->
+<!-- This is where the magic happens. All views are loaded here. -->
+<main id="main-content" class="flex-1 overflow-auto p-12">
+    <div class="max-w-4xl mx-auto flex flex-col items-center justify-center h-full text-zinc-500">
+        <p class="text-xl">Select a module from the sidebar to begin.</p>
+    </div>
+</main>
+
+</body>
+</html>

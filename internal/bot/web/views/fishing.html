@@ -1,0 +1,32 @@
+{{ define "fishing-view" }}
+<div class="max-w-2xl animate-in fade-in duration-300">
+    <header class="mb-8">
+        <h2 class="text-3xl font-black tracking-tight text-white mb-2">Fishing Module</h2>
+        <p class="text-zinc-400">Automate fishing in water tiles within range.</p>
+    </header>
+
+    <div class="grid gap-6">
+        <!-- Status Card -->
+        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex justify-between items-center">
+            <div>
+                <h3 class="font-bold text-white">Module Status</h3>
+                <p class="text-xs text-zinc-500">The bot will search for water and use your rod.</p>
+            </div>
+
+            <!-- The Toggle we built earlier -->
+            <div id="fishing-toggle-container">
+                {{ template "fishing-toggle" . }}
+            </div>
+        </div>
+
+        <!-- Configuration Card (Placeholder for more settings) -->
+        <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl">
+            <h3 class="font-bold text-white mb-4">Settings</h3>
+            <div class="flex items-center justify-between opacity-50">
+                <span class="text-sm">Anti-Idle Movement</span>
+                <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Soon</span>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

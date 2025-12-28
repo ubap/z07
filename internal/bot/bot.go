@@ -10,6 +10,8 @@ import (
 )
 
 type Bot struct {
+	fishingEnabled bool
+
 	state *state.GameState
 
 	UserActions chan []byte // packets sent by client to server
@@ -38,8 +40,9 @@ func (b *Bot) Start() {
 
 	b.runModule("LightHack", b.loopLightHack)
 	b.runModule("HandleUserAction", b.loopHandleUserAction)
-	//b.runModule("Fishing", b.loopFishing)
-	b.runModule("WebDebug", b.loopWebDebug)
+	b.runModule("Fishing", b.loopFishing)
+	//b.runModule("WebDebug", b.loopWebDebug)
+	b.runModule("UI", b.loopWebUI)
 }
 
 func (b *Bot) Stop() {
