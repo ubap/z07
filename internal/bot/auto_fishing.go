@@ -30,8 +30,8 @@ func (b *Bot) loopFishing() {
 				continue
 			}
 
-			fishPos, tileWithFish := b.findFishPos(frame)
-			if fishPos == nil {
+			tileWithFish := b.findFishPos(frame)
+			if tileWithFish == nil {
 				continue
 			}
 
@@ -40,7 +40,7 @@ func (b *Bot) loopFishing() {
 				FromItemId:   3483,
 				FromStackPos: 0,
 
-				ToPos:      *fishPos,
+				ToPos:      tileWithFish.Position,
 				ToItemId:   tileWithFish.Items[0].ID,
 				ToStackPos: 0,
 			}
@@ -50,7 +50,7 @@ func (b *Bot) loopFishing() {
 	}
 }
 
-func (b *Bot) findFishPos(frame state.WorldSnapshot) (*domain.Position, *domain.Tile) {
+func (b *Bot) findFishPos(frame state.WorldSnapshot) *domain.Tile {
 	pos := frame.Player.Pos
 	for x := pos.X - 7; x <= pos.X+7; x++ {
 		for y := pos.Y - 5; y <= pos.Y+5; y++ {
@@ -58,10 +58,10 @@ func (b *Bot) findFishPos(frame state.WorldSnapshot) (*domain.Position, *domain.
 			tile, ok := frame.WorldMap[currentPos]
 			if ok && tile.Items[0].ID == 4598 {
 				log.Printf("[Bot] Found water with tile at (%d, %d, %d)", x, y, pos.Z)
-				return &currentPos, tile
+				return tile
 			}
 		}
 
 	}
-	return nil, nil
+	return nil
 }

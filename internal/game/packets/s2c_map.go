@@ -134,7 +134,7 @@ func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) 
 				Z: uint8(currentZ),
 			}
 
-			tile := parseTile(pr)
+			tile := parseTile(pr, tilePos)
 			tiles[tilePos] = tile
 		}
 
@@ -153,10 +153,11 @@ func parseMapDescription(pr *protocol.PacketReader, x, y, z, width, height int) 
 	}
 }
 
-func parseTile(pr *protocol.PacketReader) *domain.Tile {
+func parseTile(pr *protocol.PacketReader, tilePos domain.Position) *domain.Tile {
 	// 1. Setup the Tile struct
 	t := &domain.Tile{
-		Items: make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
+		Position: tilePos,
+		Items:    make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
 	}
 
 	groundItem := readItem(pr)
