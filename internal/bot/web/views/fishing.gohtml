@@ -13,9 +13,9 @@
                 <p class="text-xs text-zinc-500">The bot will search for water and use your rod.</p>
             </div>
 
-            <!-- The Toggle we built earlier -->
             <div id="fishing-toggle-container">
-                {{ template "fishing-toggle" . }}
+                <!-- Call the generic toggle and pass the specific fishing data -->
+                {{ template "toggle" .FishingData }}
             </div>
         </div>
 

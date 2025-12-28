@@ -1,8 +1,13 @@
 {{ define "toggle" }}
     <button hx-post="{{ .Endpoint }}"
             hx-swap="outerHTML"
-            class="w-full flex items-center justify-between p-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition">
-        <span class="text-sm font-medium">{{ .Name }}</span>
-        <div class="w-2.5 h-2.5 rounded-full {{ if .Enabled }}bg-green-500 shadow-[0_0_8px_#22c55e]{{ else }}bg-red-500{{ end }}"></div>
+            class="flex items-center gap-4 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 transition-all">
+    <span class="text-sm font-bold uppercase tracking-wider text-zinc-300">
+        {{ if .Enabled }}Active{{ else }}Disabled{{ end }}
+    </span>
+        <!-- The visual switch -->
+        <div class="w-10 h-6 rounded-full relative transition-colors {{ if .Enabled }}bg-blue-600{{ else }}bg-zinc-700{{ end }}">
+            <div class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all {{ if .Enabled }}left-5{{ else }}left-1{{ end }}"></div>
+        </div>
     </button>
 {{ end }}
