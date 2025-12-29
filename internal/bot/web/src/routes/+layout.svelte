@@ -8,8 +8,8 @@
 	onMount(() => connect());
 
 	const navItems = [
+		{ name: 'Tools', href: '/tools', icon: '⚙️' },
 		{ name: 'Character Stats', href: '/stats', icon: '📊' },
-		{ name: 'Fishing Bot', href: '/fishing', icon: '🎣' },
 		{ name: 'Waypoints', href: '/waypoints', icon: '' }
 	];
 </script>
