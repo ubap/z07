@@ -84,16 +84,14 @@ func (g *GameSession) loopC2S() {
 			g.ErrChan <- fmt.Errorf("C2S Read: %w", err)
 			return
 		}
-		if err := g.ServerConn.WriteMessage(rawMsg); err != nil {
-			g.ErrChan <- fmt.Errorf("C2S Write: %w", err)
+		patchedMsg, err := g.Bot.InterceptC2SPacket(rawMsg)
+		if err != nil {
+			g.ErrChan <- fmt.Errorf("C2S Patch: %w", err)
 			return
 		}
-
-		select {
-		case g.Bot.UserActions <- rawMsg:
-			// Successfully queued for processing
-		default:
-			// If the queue is full, this packet is dropped.
+		if err := g.ClientConn.WriteMessage(patchedMsg); err != nil {
+			g.ErrChan <- fmt.Errorf("C2S Write: %w", err)
+			return
 		}
 	}
 }

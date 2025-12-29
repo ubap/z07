@@ -14,8 +14,6 @@ type Bot struct {
 
 	state *state.GameState
 
-	UserActions chan []byte // packets sent by client to server
-
 	clientConn protocol.Connection
 	serverConn protocol.Connection
 	stopChan   chan struct{}  // The broadcast channel
@@ -27,8 +25,6 @@ func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn p
 	return &Bot{
 		state: state,
 
-		UserActions: make(chan []byte, 1024),
-
 		clientConn: clientConn,
 		serverConn: serverConn,
 		stopChan:   make(chan struct{}),
@@ -39,7 +35,6 @@ func (b *Bot) Start() {
 	log.Println("[Bot] Engine started")
 
 	b.runModule("LightHack", b.loopLightHack)
-	b.runModule("HandleUserAction", b.loopHandleUserAction)
 	b.runModule("Fishing", b.loopFishing)
 	b.runModule("UI", b.loopWebUI)
 }
@@ -100,29 +95,6 @@ func (b *Bot) loopLightHack() {
 	}
 }
 
-func (b *Bot) loopHandleUserAction() {
-	for {
-		select {
-		case <-b.stopChan:
-			return
-		case packet := <-b.UserActions:
-			b.handleUserAction(packet)
-		}
-	}
-}
-
-func (b *Bot) handleUserAction(rawMsg []byte) {
-	packetReader := protocol.NewPacketReader(rawMsg)
-	packet, err := packets.ReadAndParseC2S(packetReader)
-	if err != nil {
-		return
-	}
-	switch p := packet.(type) {
-	case *packets.LookRequest:
-		log.Printf("User looked at item ID: %d", p.ItemId)
-	}
-}
-
 // InterceptS2CPacket has to return immediately.
 func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
@@ -135,4 +107,29 @@ func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
 		return pw.GetBytes()
 	}
 	return data, nil
+}
+
+// InterceptC2SPacket has to return immediately.
+func (b *Bot) InterceptC2SPacket(data []byte) ([]byte, error) {
+	pr := protocol.NewPacketReader(data)
+	firstByte, err := pr.PeekUint8()
+	if err != nil {
+		log.Println("[Bot] InterceptC2SPacket err:", err)
+		return data, err
+	}
+	opcode := packets.C2SOpcode(firstByte)
+	switch opcode {
+	case packets.C2SLookRequest:
+		b.handleLookRequest(pr)
+	}
+	return data, nil
+}
+
+func (b *Bot) handleLookRequest(pr *protocol.PacketReader) {
+	p, err := packets.ParseLookRequest(pr)
+	if err != nil {
+		log.Printf("Failed to parse look request: %v", err)
+		return
+	}
+	log.Printf("User looked at item ID: %d", p.ItemId)
 }
