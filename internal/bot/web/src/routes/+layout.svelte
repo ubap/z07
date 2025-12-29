@@ -23,7 +23,7 @@
 			<h1
 				class="text-xl font-bold text-orange-500 tracking-tight"
 			>
-				z07 Proxy
+				z07
 			</h1>
 			<p
 				class="text-xs text-slate-500 uppercase tracking-widest mt-1"
