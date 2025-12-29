@@ -2,7 +2,7 @@
 .vscode/
 __debug_bin*
 
-/goTibia
+/z07
 data/
 
 Tibia_patched.exe

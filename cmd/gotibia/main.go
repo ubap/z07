@@ -38,7 +38,7 @@ func main() {
 
 	loginHandler := &login.LoginHandler{
 		TargetAddr: "world.fibula.app:7171",
-		ProxyMOTD:  "Welcome to GoTibia Proxy!",
+		ProxyMOTD:  "Welcome to z07 Proxy!",
 	}
 
 	gameHandler := game.NewGameHandler("world.fibula.app:7172")
