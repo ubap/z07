@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -118,17 +117,18 @@ func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
 
 // InterceptC2SPacket has to return immediately.
 func (b *Bot) InterceptC2SPacket(data []byte) ([]byte, error) {
-	pr := protocol.NewPacketReader(data)
-	opcode := packets.C2SOpcode(pr.ReadUint8())
+	opcode := packets.C2SOpcode(data[0])
 
 	// LOG FOR TESTING
 	// This only prints in terminal so you can copy it
-	fmt.Println("\n--- COPY ME FOR TEST ---")
-	fmt.Println(FormatForTest(fmt.Sprintf("Opcode: %d", opcode), data))
-	fmt.Println("------------------------")
+	//fmt.Println("\n--- COPY ME FOR TEST ---")
+	//fmt.Println(FormatForTest(fmt.Sprintf("Opcode: %d", opcode), data))
+	//fmt.Println("------------------------")
 
 	switch opcode {
 	case packets.C2SLookRequest:
+		pr := protocol.NewPacketReader(data)
+		pr.ReadUint8() // skip opcode
 		b.handleLookRequest(pr)
 	}
 	return data, nil
