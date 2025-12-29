@@ -71,8 +71,3 @@ Key successfully saved to: RSA.txt
 
 *   **For Patcher Developers:** Use the **Hex Offset** (`0x15B620`) to update the `RSAAddress` constant in `client_patcher.go` if you are supporting a new client version.
 *   **For Proxy Users:** The content of `rsa_key.txt` is the Public Key the client uses. The proxy must use this key to properly encrypt the communication with the server.
-
-
-----
-Decisions:
-* bot holds connections to client and to server, bot sends the packets, not any channels
