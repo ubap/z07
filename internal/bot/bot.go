@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ type Bot struct {
 	// Module states
 	fishingEnabled   bool
 	lighthackEnabled bool
+	lastLookedAt     uint16
 }
 
 func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn protocol.Connection) *Bot {
@@ -117,12 +119,14 @@ func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
 // InterceptC2SPacket has to return immediately.
 func (b *Bot) InterceptC2SPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
-	firstByte, err := pr.PeekUint8()
-	if err != nil {
-		log.Println("[Bot] InterceptC2SPacket err:", err)
-		return data, err
-	}
-	opcode := packets.C2SOpcode(firstByte)
+	opcode := packets.C2SOpcode(pr.ReadUint8())
+
+	// LOG FOR TESTING
+	// This only prints in terminal so you can copy it
+	fmt.Println("\n--- COPY ME FOR TEST ---")
+	fmt.Println(FormatForTest(fmt.Sprintf("Opcode: %d", opcode), data))
+	fmt.Println("------------------------")
+
 	switch opcode {
 	case packets.C2SLookRequest:
 		b.handleLookRequest(pr)
@@ -136,5 +140,5 @@ func (b *Bot) handleLookRequest(pr *protocol.PacketReader) {
 		log.Printf("Failed to parse look request: %v", err)
 		return
 	}
-	log.Printf("User looked at item ID: %d", p.ItemId)
+	b.lastLookedAt = p.ItemId
 }
