@@ -66,7 +66,18 @@
                     min="0"
                     max="16"
                     value={bot.lighthackLevel}
-                    oninput={(e) => bot.setLighthackLevel(e.target.value)}
+                    oninput={(e) => {
+        let val = parseInt(e.target.value);
+
+        if (val > 16) {
+            val = 16;
+        } else if (val < 0) {
+            val = 0;
+        }
+        e.target.value = val;
+
+        bot.setLighthackLevel(val);
+        }}
                     disabled={!bot.lighthackEnabled}
                     class="w-12 text-center font-mono text-orange-500 bg-slate-950 px-1 py-0.5 rounded border border-slate-800 text-xs
                    focus:ring-1 focus:ring-orange-500 focus:outline-none focus:border-orange-500/50
@@ -79,18 +90,7 @@
                 min="0"
                 max="16"
                 value={bot.lighthackLevel}
-                oninput={(e) => {
-        let val = parseInt(e.target.value);
-
-        if (val > 16) {
-            val = 16;
-        } else if (val < 0) {
-            val = 0;
-        }
-        e.target.value = val;
-
-        bot.lighthackLevel(val);
-    }}
+                oninput={(e) => bot.setLighthackLevel(e.target.value)}
                 disabled={!bot.lighthackEnabled}
                 class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500 disabled:opacity-30 disabled:cursor-not-allowed"
         />
