@@ -2,6 +2,12 @@ package domain
 
 import "fmt"
 
+/**
+Inventory is both Equipment and Containers.
+Equipment slots are represented as Position{X: 0xFFFF, Y: slotIndex, Z: 0}.
+Container slots are represented as Position{X: 0xFFFF, Y: 64 + containerIndex, Z: slotIndex}.
+*/
+
 type Position struct {
 	X, Y uint16
 	Z    uint8
@@ -30,23 +36,23 @@ func NewContainerPosition(containerIndex, slot int) Position {
 }
 
 type Container struct {
-	// 1. Identification
-	ID     uint8  // The window index (0-15). Crucial for logic.
+	// Identification
+	ID     uint8  // The window index (0-15).
 	ItemID uint16 // The visual ID (e.g., 1988 for Brown Backpack).
 	Name   string
 
-	// 2. State
+	// State
 	Capacity  uint8 // Total slots available (e.g. 20).
 	HasParent bool  // Useful to know if this is inside another container.
 
-	// 3. Contents
+	// Contents
 	Items []Item
 }
 
 type Item struct {
 	ID       uint16
 	Count    uint8 // Used for stack count, fluid type, or rune charges
-	HasCount bool  // Helper to know if we should write the Count byte
+	HasCount bool  // Helper to know if we should Encode the Count byte
 }
 
 func (i Item) String() string {
@@ -54,7 +60,6 @@ func (i Item) String() string {
 		return fmt.Sprintf("ID: %d (x%d)", i.ID, i.Count)
 	}
 
-	// 2. Simple items
 	return fmt.Sprintf("ID: %d", i.ID)
 }
 
