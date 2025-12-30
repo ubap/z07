@@ -111,8 +111,7 @@ func (b *Bot) loopLightHack() {
 
 // InterceptS2CPacket has to return immediately.
 func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
-	pr := protocol.NewPacketReader(data)
-	opcode := packets.S2COpcode(pr.ReadUint8())
+	opcode := packets.S2COpcode(data[0])
 	switch opcode {
 	case packets.S2CSLoginQueue:
 		pw := protocol.NewPacketWriter()
