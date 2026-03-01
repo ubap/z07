@@ -27,7 +27,7 @@ func init() {
 	}
 	RSA.ClientPrivateKey = privateKey
 
-	publicKey, err := buildPublicKeyFromComponents(targetServerRSA)
+	publicKey, err := buildPublicKeyFromComponents(OTPublicRSA)
 	if err != nil {
 		panic(fmt.Sprintf("FATAL: Could not build RSA public key: %v", err))
 	}

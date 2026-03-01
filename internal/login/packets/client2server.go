@@ -19,6 +19,20 @@ type ClientCredentialPacket struct {
 	Password      string
 }
 
+func NewClientCredentialPacket(accountNumber uint32, password string) *ClientCredentialPacket {
+	return &ClientCredentialPacket{
+		Protocol:      1,
+		ClientOS:      1,
+		ClientVersion: 772,
+		DatSignature:  1,
+		SprSignature:  2,
+		PicSignature:  3,
+		XTEAKey:       [4]uint32{0x11111111, 0x22222222, 0x33333333, 0x44444444},
+		AccountNumber: accountNumber,
+		Password:      password,
+	}
+}
+
 func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 	pw.WriteUint8(lp.Protocol)
 	pw.WriteUint16(lp.ClientOS)
