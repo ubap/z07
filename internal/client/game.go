@@ -3,11 +3,11 @@ package client
 import (
 	"fmt"
 	"log"
-	"z07/internal/login/packets"
+	"z07/internal/game/packets"
 	"z07/internal/protocol"
 )
 
-func Login(targetAddr string) error {
+func Game(targetAddr string) error {
 	server, err := ConnectToBackend(targetAddr)
 	defer server.Close()
 	if err != nil {
@@ -16,14 +16,14 @@ func Login(targetAddr string) error {
 		log.Printf("connected to backend: %s", targetAddr)
 	}
 
-	packet := packets.NewClientCredentialPacket(1, "1")
+	packet := packets.NewGameLoginRequest(1, "God", "1")
 
 	if err := server.SendPacket(packet); err != nil {
 		server.Close()
 		return fmt.Errorf("forward packet: %w", err)
 	}
 
-	log.Printf("[Login] Sent credentials, awaiting response...")
+	log.Printf("[Game] Sent credentials, awaiting response...")
 
 	// 5. Enable Encryption
 	key := packet.GetXTEAKey()
@@ -39,6 +39,6 @@ func Login(targetAddr string) error {
 		return err
 	}
 
-	log.Printf("[Login] Received response: %x", resultMessage)
+	log.Printf("[Game] Received response: %x", resultMessage)
 	return nil
 }

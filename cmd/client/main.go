@@ -6,7 +6,12 @@ import (
 )
 
 func main() {
-	err := client.Login("127.0.0.1:7171")
+	//err := client.Login("127.0.0.1:7171")
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	err := client.Game("127.0.0.1:7172")
 	if err != nil {
 		fmt.Println(err)
 	}

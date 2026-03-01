@@ -78,6 +78,19 @@ func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, erro
 	return packet, packetReader.Err()
 }
 
+func NewGameLoginRequest(accountNumber uint32, characterName string, password string) *LoginRequest {
+	return &LoginRequest{
+		Protocol:      1,
+		ClientOS:      1,
+		ClientVersion: 772,
+		XTEAKey:       [4]uint32{0x11111111, 0x22222222, 0x33333333, 0x44444444},
+		Gamemaster:    false,
+		AccountNumber: accountNumber,
+		CharacterName: characterName,
+		Password:      password,
+	}
+}
+
 func (lr *LoginRequest) GetXTEAKey() [4]uint32 {
 	return lr.XTEAKey
 }
